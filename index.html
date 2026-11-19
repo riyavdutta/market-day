@@ -70,6 +70,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .pill.title{background:var(--b);color:#fff8ea;box-shadow:0 6px 0 #0000001f}
 .pill.title b{font-weight:700}
 .purse .ic{background:#ffd34d}
+button.pill{border:0;padding:8px 12px 8px 10px}
+.snd .ic{background:#bfe9ff}
+.snd[aria-pressed="false"] .ic{background:#e9dccb;color:#9a7b62}
 .bump{animation:bump .5s var(--spring)}
 @keyframes bump{40%{transform:scale(1.18)}}
 
@@ -107,7 +110,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .book .acts{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:999px;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
-@media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}.talk{padding:24px 20px 14px}}
+@media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -115,7 +118,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="stage" id="stage"><svg class="scene" id="w" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A hill market on a sunny morning"></svg></div>
 
 <div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span></div>
-<div class="hud r"><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
+<div class="hud r"><button class="pill snd" id="snd" type="button" aria-pressed="true" aria-label="Sound"><span class="ic">♪</span><span id="sndtx">On</span></button><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
@@ -211,7 +214,7 @@ const ITEMS=[];
 function good(name,price,draw,tx,ty){const it=g({class:'goods',tabindex:0,role:'button','aria-label':name+', ₹'+price},goods);const gi=g({class:'gitem'},it);draw(gi);
   const tg=g({class:'tag',style:'animation-delay:'+(-tx%3)+'s'},it);el('path',{d:`M${tx} ${sy-6} v14`,stroke:'#5b3a2e',"stroke-width":2.5},tg);el('rect',{x:tx-30,y:sy+8,width:60,height:30,rx:8,fill:'#fff8ea',class:'ol',"stroke-width":3},tg);
   el('text',{x:tx,y:sy+30,"text-anchor":'middle',style:'font:700 17px Fredoka,sans-serif;fill:#5b3a2e'},tg).textContent='₹'+price;
-  const say=()=>toast(name+' · ₹'+price);it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});ITEMS.push({name,price,it})}
+  const say=()=>{sfx('tap');toast(name+' · ₹'+price)};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});ITEMS.push({name,price,it})}
 function jar(p,x,h,w){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
 good('Small jar of mountain honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
 good('Medium jar of mountain honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
@@ -241,7 +244,7 @@ el('path',{d:`M${bx-60} ${by-88} q30 8 60 0 q30 -8 60 0`,stroke:'#ffcf5a',"strok
 const tapme=g({class:'bob'},BD);el('rect',{x:bx-34,y:by-232,width:68,height:30,rx:15,fill:'#ffd34d',class:'ol',"stroke-width":3},tapme);el('text',{x:bx,y:by-211,"text-anchor":'middle',style:'font:700 16px Fredoka,sans-serif;fill:#5b3a2e'},tapme).textContent='tap!';
 function drawSign(){l1.textContent=SIGNS[sign].t[0];l2.textContent=SIGNS[sign].t[1]}
 drawSign();
-const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”')};
+const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();sfx('chalk');tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”')};
 BD.addEventListener('click',nextSign);BD.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();nextSign()}});
 
 /* ---------- Riya, the stall keeper's friend ---------- */
@@ -310,15 +313,48 @@ const hs=g({});el('rect',{x:1420,y:300,width:80,height:60,rx:6,fill:'#fff8ea',cl
 const sm=g({class:'smoke'});for(let k=0;k<3;k++)el('circle',{cx:1490,cy:262,r:10},sm);
 const duskL=el('rect',{x:0,y:0,width:1600,height:1000,class:'dusk'});
 
+/* ---------- sound: every effect is made live in the browser, no audio files ---------- */
+let AC=null,master=null,muted=false,armed=false;
+try{muted=localStorage.getItem('md-muted')==='1'}catch(e){}
+// browsers only allow sound after the first tap or key press
+const arm=()=>{armed=true};addEventListener('pointerdown',arm,{once:true});addEventListener('keydown',arm,{once:true});
+function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.55;master.connect(AC.destination)}
+  if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,t0,dur,o={}){const a=ac();if(!a)return;const t=a.currentTime+t0,osc=a.createOscillator(),gn=a.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(f,t);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,t+dur);
+  gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(o.vol||.2,t+(o.attack||.005));gn.gain.exponentialRampToValueAtTime(.0001,t+dur);osc.connect(gn).connect(master);osc.start(t);osc.stop(t+dur+.05)}
+function hiss(t0,dur,o={}){const a=ac();if(!a)return;const t=a.currentTime+t0,n=Math.max(1,a.sampleRate*dur|0),b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=a.createBufferSource();s.buffer=b;const fl=a.createBiquadFilter();fl.type=o.type||'bandpass';fl.frequency.setValueAtTime(o.freq||1200,t);if(o.to)fl.frequency.exponentialRampToValueAtTime(o.to,t+dur);fl.Q.value=o.q||1;
+  const gn=a.createGain();gn.gain.setValueAtTime(o.vol||.15,t);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl).connect(gn).connect(master);s.start(t)}
+const SFX={
+  chalk(){for(let k=0;k<3;k++)hiss(k*.075,.06,{vol:.22,freq:2800+k*600,q:2})},                       // three quick chalk strokes
+  tap(){tone(880,0,.08,{type:'triangle',vol:.12})},                                                    // a soft button click
+  open(){hiss(0,.5,{vol:.16,freq:300,to:2600,q:.7});[523,659,784,1047].forEach((f,i)=>tone(f,.28+i*.09,.5,{type:'triangle',vol:.13}))}, // the cloth whooshes up, a bright little run
+  step(){hiss(0,.06,{vol:.09,freq:420,q:1.2,type:'lowpass'})},                                       // a light footstep on the path
+  pop(){tone(480,0,.14,{vol:.16,to:960})},                                                             // the thought bubble pops up
+  coin(){tone(1319,0,.1,{type:'square',vol:.05});tone(1760,.08,.4,{type:'square',vol:.05});tone(2637,.08,.45,{vol:.07})}, // ka-ching
+  meh(){tone(392,0,.24,{type:'triangle',vol:.1,to:349});tone(330,.2,.4,{type:'triangle',vol:.09,to:262})},  // a little 'hmm, no'
+  bell(){[0,.4].forEach(t=>{tone(1047,t,1.3,{vol:.12});tone(1568,t,1,{vol:.04});tone(2093,t,.7,{vol:.04})})}, // the lunch bell
+  blip(p){tone(p*(.95+Math.random()*.1),0,.035,{type:'square',vol:.018})},                            // each speaker's voice while they talk
+  dusk(){[262,330,392,523].forEach((f,i)=>tone(f,i*.13,1.7,{type:'triangle',vol:.08}));tone(659,.6,1.9,{vol:.05})}, // evening chord as the ledger opens
+  perfect(){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.7,{type:'triangle',vol:.12}));SFX.coin()}
+};
+function sfx(k,arg){if(muted||!armed||!SFX[k])return;try{SFX[k](arg)}catch(e){}}
+function steps(ms){if(reduce||muted)return;let n=0;const t=setInterval(()=>{sfx('step');if((n+=320)>=ms)clearInterval(t)},320)}
+const VOICE={Riya:620,Pip:520,Juno:820,Nell:980,Kiko:300,Wren:700};
+const sndBtn=$('#snd');
+function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
+drawSnd();
+sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap')});
+
 /* ---------- the HUD and talk ---------- */
 const talkEl=$('#talk'),sayEl=$('#say'),acts=$('#acts'),who=$('#who');let typing=null;
 function talk(name,colour,fg,text,buttons,extra){clearInterval(typing);talkEl.classList.remove('hide');who.textContent=name;talkEl.style.setProperty('--c',colour);talkEl.style.setProperty('--fg',fg||'#fff8ea');
   sayEl.textContent='';acts.innerHTML='';let k=0;
-  const done=()=>{clearInterval(typing);sayEl.innerHTML=text+(extra?'<br><span class="principle">'+extra+'</span>':'');acts.innerHTML='';(buttons||[]).forEach(b=>{const x=document.createElement('button');x.className='btn'+(b.soft?' soft':'');x.type='button';x.textContent=b.t;x.onclick=b.fn;acts.appendChild(x)})};
-  if(reduce)return done();typing=setInterval(()=>{k+=2;sayEl.textContent=text.slice(0,k);if(k>=text.length)done()},20);sayEl.onclick=done}
+  const done=()=>{clearInterval(typing);sayEl.innerHTML=text+(extra?'<br><span class="principle">'+extra+'</span>':'');acts.innerHTML='';(buttons||[]).forEach(b=>{const x=document.createElement('button');x.className='btn'+(b.soft?' soft':'');x.type='button';x.textContent=b.t;x.onclick=()=>{sfx('tap');b.fn()};acts.appendChild(x)})};
+  if(reduce)return done();typing=setInterval(()=>{k+=2;sayEl.textContent=text.slice(0,k);if(k%6===0)sfx('blip',VOICE[name]||600);if(k>=text.length)done()},20);sayEl.onclick=done}
 const hush=()=>talkEl.classList.add('hide');
 const toastEl=$('#toast');let tt;function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),1800)}
-let money=0;function earn(n,x,y){money+=n;$('#money').textContent=money;const pu=$('#purse');pu.classList.remove('bump');void pu.offsetWidth;pu.classList.add('bump');
+let money=0;function earn(n,x,y){money+=n;sfx('coin');$('#money').textContent=money;const pu=$('#purse');pu.classList.remove('bump');void pu.offsetWidth;pu.classList.add('bump');
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin'});c.textContent='+₹'+n;setTimeout(()=>c.remove(),1500)}
 function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');sun.style.transform='translate('+(-(h-9)*80)+'px,'+(Math.max(0,h-13)*26)+'px)'}
 
@@ -336,11 +372,11 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
   if(key==='panda')return s===3?{buy:'Small jar of mountain honey',n:120,think:'Made in the hills? Then it’s made for me.',why:'Where it comes from',note:'Wren buys local. Saying where it’s made won her over.'}:{think:'Hmm, where’s this from? Never mind.',why:'Where it comes from',note:'She wanted to know it was local. “Made in the hills” would have won her.'};}
 const spot=(i)=>({x:sx-150+i*0,y:sy+240});
 let morningSign=0,lunched=false,paused=false;
-function run(){open=true;morningSign=sign;$('#stall').classList.add('opened');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+function run(){open=true;morningSign=sign;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
   let h=9,m=0;clock(h,m);const tick=setInterval(()=>{if(paused)return;m+=30;if(m>=60){m=0;h++}clock(h,m);document.documentElement.style.setProperty('--dusk',Math.max(0,(h-14)/5*.45))},3000);
   const cast=order.map(villager);let i=0;
   // lunchtime: the one chance to change the sign for the afternoon shoppers
-  function lunch(){lunched=true;paused=true;h=13;m=0;clock(h,m);open=false;
+  function lunch(){lunched=true;paused=true;sfx('bell');h=13;m=0;clock(h,m);open=false;
     const sold=log.filter(l=>l.buy).length;
     talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. Kiko and Wren come by this afternoon. Want to change the sign for them?',[
       {t:'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea','Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
@@ -349,11 +385,11 @@ function run(){open=true;morningSign=sign;$('#stall').classList.add('opened');hu
   function nextOne(){if(i===3&&!lunched)return lunch();
     if(i>=cast.length){setTimeout(()=>{clearInterval(tick);clock(17,30);document.documentElement.style.setProperty('--dusk',.5);endDay()},1200);return}
     const v=cast[i++],d=decide(v.key);
-    v.o.style.setProperty('--wt',reduce?'0s':'3.2s');v.o.classList.add('walking');
+    v.o.style.setProperty('--wt',reduce?'0s':'3.2s');v.o.classList.add('walking');steps(3000);
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
-    setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');
+    setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);}log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
@@ -371,7 +407,7 @@ function endDay(){const sold=log.filter(l=>l.buy);
   const n=sold.length;
   $('#sum').textContent=n===5?'All 5 villagers bought something today. A perfect day! It took the right sign at the right time.'
     :n+' of 5 villagers bought something today. Pip and Kiko buy on price alone; the other three answer to your sign. A perfect day is possible. Can you find it?';
-  hush();setTimeout(()=>{$('#ledger').classList.add('on')},400)}
+  hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
 
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
