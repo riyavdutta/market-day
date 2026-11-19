@@ -108,6 +108,18 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .total{display:flex;justify-content:space-between;margin-top:12px;font:700 22px var(--font);color:var(--b)}
 .sum{margin:14px 6px 0;color:#fff8ea;font:600 18px/1.4 var(--font);text-align:center}
 .book .acts{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.prices{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:45;width:min(440px,calc(100% - 20px));max-height:calc(100vh - 90px);overflow:auto;background:var(--paper);border-radius:28px;padding:18px 20px 16px;box-shadow:0 0 0 5px var(--ink),0 10px 0 5px #0000001f;display:none}
+.prices.on{display:block;animation:open .45s var(--spring)}
+@media (min-width:1000px){.prices{left:auto;right:20px;translate:none;width:400px}}
+.prices h3{font:700 24px var(--font);color:var(--b)}
+.prices>small{display:block;font:500 15px/1.35 var(--font);color:#9a7b62;margin:2px 0 8px}
+.prow{display:grid;grid-template-columns:1fr auto 70px auto;gap:8px;align-items:center;padding:6px 8px;border-bottom:2px dashed #e0c89e;border-radius:12px;transition:background .4s}
+.prow b{font:600 17px var(--font)}
+.prow output{font:700 20px var(--font);color:var(--b);text-align:center}
+.prow.hi{background:#fff0c4}
+.step{width:38px;height:38px;border-radius:50%;border:0;background:var(--honey);font:700 22px/1 var(--font);color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset,0 3px 0 #0000001f}
+.step:active{transform:translateY(2px)}
+.prices .btn{margin-top:12px;width:100%}
 .toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:999px;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
 @media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
@@ -119,6 +131,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 
 <div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span></div>
 <div class="hud r"><button class="pill snd" id="snd" type="button" aria-pressed="true" aria-label="Sound"><span class="ic">♪</span><span id="sndtx">On</span></button><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
+<div class="prices" id="prices" role="dialog" aria-label="Price tags"><h3>Price tags</h3><small>Every villager has a limit. The right sign, or the right price beside it, can stretch it.</small><div id="plist"></div><button class="btn" id="pdone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
@@ -210,18 +223,23 @@ el('rect',{x:sx-220,y:sy-20,width:440,height:150,rx:14,fill:'url(#planks)',class
 el('rect',{x:sx-232,y:sy-38,width:464,height:32,rx:12,fill:'#e0a873',class:'ol'},S);
 // goods on the counter: honey in three sizes, a crate of apples, woollen caps, a Kullu shawl
 const goods=g({id:'goods'},S);
-const ITEMS=[];
-function good(name,price,draw,tx,ty){const it=g({class:'goods',tabindex:0,role:'button','aria-label':name+', ₹'+price},goods);const gi=g({class:'gitem'},it);draw(gi);
+const ITEMS={},PRICE={};let started=false;
+function good(key,name,short,price,draw,tx){const it=g({class:'goods',tabindex:0,role:'button','aria-label':name},goods);const gi=g({class:'gitem'},it);draw(gi);
   const tg=g({class:'tag',style:'animation-delay:'+(-tx%3)+'s'},it);el('path',{d:`M${tx} ${sy-6} v14`,stroke:'#5b3a2e',"stroke-width":2.5},tg);el('rect',{x:tx-30,y:sy+8,width:60,height:30,rx:8,fill:'#fff8ea',class:'ol',"stroke-width":3},tg);
-  el('text',{x:tx,y:sy+30,"text-anchor":'middle',style:'font:700 17px Fredoka,sans-serif;fill:#5b3a2e'},tg).textContent='₹'+price;
-  const say=()=>{sfx('tap');toast(name+' · ₹'+price)};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});ITEMS.push({name,price,it})}
+  const lbl=el('text',{x:tx,y:sy+30,"text-anchor":'middle',style:'font:700 17px Fredoka,sans-serif;fill:#5b3a2e'},tg);
+  // before the stall opens, tapping a good opens its price tag; after, it just tells you the price
+  const say=()=>{sfx('tap');if(!started)showPrices(key);else toast(name+' · ₹'+PRICE[key])};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});
+  ITEMS[key]={name,short,it,lbl};setPrice(key,price,true)}
+function setPrice(k,v,quiet){PRICE[k]=v;ITEMS[k].lbl.textContent='₹'+v;ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+v);
+  if(!quiet)try{localStorage.setItem('md-prices',JSON.stringify(PRICE))}catch(e){}}
 function jar(p,x,h,w){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
-good('Small jar of mountain honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
-good('Medium jar of mountain honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
-good('Large jar of mountain honey',400,p=>jar(p,sx-65,72,52),sx-65,0);
-good('Crate of Himachali apples',90,p=>{el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy])=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:dx%20?'#ff4d6d':'#e8336d',class:'ol',"stroke-width":3},p))},sx+27,0);
-good('Woollen Himachali cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130,0);
-good('Kullu shawl',900,p=>{el('path',{d:`M${sx+178} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:sx+184,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},sx+206,0);
+good('small','Small jar of mountain honey','Small honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
+good('medium','Medium jar of mountain honey','Medium honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
+good('large','Large jar of mountain honey','Big honey',400,p=>jar(p,sx-65,72,52),sx-65,0);
+good('apples','Crate of Himachali apples','Apples',90,p=>{el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy])=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:dx%20?'#ff4d6d':'#e8336d',class:'ol',"stroke-width":3},p))},sx+27,0);
+good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130,0);
+good('shawl','Kullu shawl','Kullu shawl',900,p=>{el('path',{d:`M${sx+178} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:sx+184,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},sx+206,0);
+try{const sv=JSON.parse(localStorage.getItem('md-prices')||'null');if(sv)for(const k in sv)if(ITEMS[k]&&sv[k]>0)setPrice(k,+sv[k],true)}catch(e){}
 // the cloth over the goods until the stall opens
 const cloth=g({class:'cloth'},S);el('path',{d:`M${sx-225} ${sy-130} h450 v96 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -114 0 z`,fill:'#800020',class:'ol'},cloth);
 el('text',{x:sx,y:sy-80,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#fff8ea'},cloth).textContent='Opening soon!';
@@ -361,18 +379,44 @@ function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(
 /* ---------- the day: each villager has a reason to buy, or not ---------- */
 let open=false,log=[];
 const order=['goat','monal','pika','yak','panda'];
-function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name);
-  if(key==='goat')return {buy:'Medium jar of mountain honey',n:180,think:'₹400 for the big one? Then the medium jar’s a steal!',why:'The decoy effect',note:'The big ₹400 jar made the middle one look like a bargain. Nobody needs the decoy to sell; it just has to sit there.'};
-  if(key==='monal')return s===1?{buy:'Crate of Himachali apples',n:90,think:'Only three left?! I’ll take them before anyone else does!',why:'Scarcity',note:'“Only 3 left” made waiting feel like losing.'}:{think:'So shiny… I’ll come back later.',why:'Scarcity',note:'She browsed and left. A sign that said “Only 3 left” would have made her buy now.'};
-  if(key==='pika'){
-    if(buyers.length>=2)return {buy:'Crate of Himachali apples',n:90,think:buyers.join(' and ')+' both bought here… it must be good!',why:'Social proof',note:'Two shoppers ahead of her bought, and that was enough. Nell follows a crowd.'};
-    if(s===2)return {buy:'Crate of Himachali apples',n:90,think:'Everyone’s favourite? Then it’s mine too!',why:'Social proof',note:'“Everyone’s favourite” told her the crowd had already chosen.'};
-    return {think:'Only one shopper so far… I’ll wait and see.',why:'Social proof',note:'One buyer isn’t a crowd. A second sale before her, or “Everyone’s favourite”, would have won her.'}}
-  if(key==='yak')return {buy:'Woollen Himachali cap',n:350,think:'The shawl’s ₹900… so a cap at ₹350 is fair.',why:'Anchoring',note:'The ₹900 shawl set the scale. Next to it, ₹350 felt small.'};
-  if(key==='panda')return s===3?{buy:'Small jar of mountain honey',n:120,think:'Made in the hills? Then it’s made for me.',why:'Where it comes from',note:'Wren buys local. Saying where it’s made won her over.'}:{think:'Hmm, where’s this from? Never mind.',why:'Where it comes from',note:'She wanted to know it was local. “Made in the hills” would have won her.'};}
-const spot=(i)=>({x:sx-150+i*0,y:sy+240});
+// each villager has a price limit; the right sign, or the right price beside it, stretches it
+const BEST_DAY=1240;
+function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k];
+  const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:P(k),think,why,note}),no=(think,why,note)=>({think,why,note});
+  if(key==='goat'){const m=P('medium'),L=P('large'),why='The decoy effect';
+    if(L>=2*m&&m<=250)return yes('medium',`₹${L} for the big one? Then the medium jar’s a steal!`,why,`The ₹${L} jar made ₹${m} look like a bargain. With a decoy at twice the price, Pip stretches to ₹250 for the medium.`);
+    const hint=L>=2*m?`₹${m} was past his ₹250 limit, even with the big jar beside it.`:`The big jar wasn’t twice the medium (₹${2*m} or more), so nothing made the medium look cheap. Without a decoy, Pip’s limit is ₹150.`;
+    const pick=m<=150?'medium':P('small')<=150?'small':null;
+    if(pick)return yes(pick,'Hmm, it all looks a bit pricey. I’ll play it safe.',why,`He took the ${pick} jar at ₹${P(pick)}. `+hint);
+    return no('All this honey is too dear for me today.',why,hint)}
+  if(key==='monal'){const a=P('apples'),why='Scarcity';
+    if(s===1&&a<=150)return yes('apples','Only three left?! I’ll take them before anyone else does!',why,'“Only 3 left” made waiting feel like losing. With it, Juno pays up to ₹150.');
+    if(a<=60)return yes('apples',`Apples for ₹${a}? I can’t say no to that.`,why,`She bought because they were cheap. “Only 3 left” would have let you charge up to ₹150.`);
+    if(s===1)return no(`Only three left… but ₹${a}? I’ll pass.`,why,`Scarcity got her attention, but she won’t pay more than ₹150.`);
+    return no('So shiny… I’ll come back later.',why,'She browsed and left. “Only 3 left” would have made her buy now, at up to ₹150.')}
+  if(key==='pika'){const a=P('apples'),crowd=buyers.length>=2,why='Social proof';
+    if((crowd||s===2)&&a<=120)return yes('apples',crowd?buyers.join(' and ')+' both bought here… it must be good!':'Everyone’s favourite? Then it’s mine too!',why,(crowd?'Two shoppers ahead of her bought, and that was enough.':'“Everyone’s favourite” told her the crowd had already chosen.')+' Her limit is ₹120.');
+    if(crowd||s===2)return no(`Everyone likes them, but ₹${a} is a lot for me.`,why,`The crowd won her over, but not at ₹${a}. Her limit is ₹120.`);
+    return no(buyers.length?'Only one shopper so far… I’ll wait and see.':'Nobody’s buying… maybe not today.',why,'One buyer isn’t a crowd. Two sales before her, or “Everyone’s favourite”, would have won her.')}
+  if(key==='yak'){const c=P('cap'),sh=P('shawl'),lim=sh>=600?Math.min(Math.floor(sh*.045)*10,550):250,why='Anchoring';
+    if(sh<=500)return yes('shawl',`A Kullu shawl for just ₹${sh}? I’ll take that instead!`,why,`The shawl was cheap enough to buy outright. Priced at ₹600 or more, it would have made a pricier cap look small instead.`);
+    if(c<=lim)return yes('cap',sh>=600?`The shawl’s ₹${sh}… so a cap at ₹${c} is fair.`:`₹${c} for a cap. Fine.`,why,sh>=600?`The ₹${sh} shawl set the scale. Next to it, Kiko would pay up to ₹${lim} for the cap.`:`With no pricey shawl beside it, his limit for a cap was ₹250.`);
+    return no(`₹${c} for a cap? That’s too much.`,why,sh>=600?`Next to the ₹${sh} shawl he’d have paid up to ₹${lim}, but not ₹${c}.`:`At ₹${sh}, the shawl made nothing look small, so his limit was ₹250. A shawl at ₹600 or more raises it.`)}
+  if(key==='panda'){const sm=P('small'),why='Where it comes from';
+    if(s===3&&sm<=200)return yes('small','Made in the hills? Then it’s made for me.',why,'Wren buys local. Saying where it’s made won her over, at up to ₹200 for the small jar.');
+    if(s===3)return no(`Local honey! But ₹${sm} for a small jar…`,why,`The sign won her; the price didn’t. Her limit for the small jar is ₹200.`);
+    return no('Hmm, where’s this from? Never mind.',why,'She wanted to know it was local. “Made in the hills” would have won her.')}}
+const step=v=>v<200?10:50;
+function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.innerHTML='';
+  ['small','medium','large','apples','cap','shawl'].forEach(key=>{const r=document.createElement('div');r.className='prow'+(key===k?' hi':'');
+    r.innerHTML='<b>'+ITEMS[key].short+'</b><button class="step" type="button" aria-label="Lower the '+ITEMS[key].short+' price">−</button><output>₹'+PRICE[key]+'</output><button class="step" type="button" aria-label="Raise the '+ITEMS[key].short+' price">+</button>';
+    const [dn,up]=r.querySelectorAll('.step'),out=r.querySelector('output');
+    const go=d=>{const v=PRICE[key],nv=Math.max(10,Math.min(2000,d>0?v+step(v):v-step(v-1)));setPrice(key,nv);out.textContent='₹'+nv;sfx('tap')};
+    dn.onclick=()=>go(-1);up.onclick=()=>go(1);pl.appendChild(r);if(key===k)setTimeout(()=>up.focus(),50)});
+  $('#prices').classList.add('on')}
+$('#pdone').onclick=()=>{sfx('tap');$('#prices').classList.remove('on');scrollTo(focus());morning()};
 let morningSign=0,lunched=false,paused=false;
-function run(){open=true;morningSign=sign;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
   let h=9,m=0;clock(h,m);const tick=setInterval(()=>{if(paused)return;m+=30;if(m>=60){m=0;h++}clock(h,m);document.documentElement.style.setProperty('--dusk',Math.max(0,(h-14)/5*.45))},3000);
   const cast=order.map(villager);let i=0;
   // lunchtime: the one chance to change the sign for the afternoon shoppers
@@ -403,15 +447,19 @@ function endDay(){const sold=log.filter(l=>l.buy);
     '<div class="total"><span>Takings</span><span>₹'+money+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Try another sign tomorrow',()=>location.reload()]].forEach(([t,f])=>{const b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=f;$('#la').appendChild(b)});
+  $('#la').innerHTML='';[['Play another day',()=>location.reload()]].forEach(([t,f])=>{const b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=f;$('#la').appendChild(b)});
   const n=sold.length;
-  $('#sum').textContent=n===5?'All 5 villagers bought something today. A perfect day! It took the right sign at the right time.'
-    :n+' of 5 villagers bought something today. Pip and Kiko buy on price alone; the other three answer to your sign. A perfect day is possible. Can you find it?';
+  let best=money;try{best=Math.max(money,+(localStorage.getItem('md-best')||0));localStorage.setItem('md-best',best)}catch(e){}
+  $('#sum').textContent=(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
+    :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
+    :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
+    (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
   hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
 
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
-setTimeout(()=>{scrollTo(focus());talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Tap the chalkboard to choose what it says, then open up.',[{t:'Open the stall',fn:run},{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run}])}])},500);
+function morning(){talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Set the prices, choose what the chalkboard says, then open up.',[{t:'Open the stall',fn:run},{t:'Set prices',soft:true,fn:()=>showPrices()},{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},{t:'Set prices',soft:true,fn:()=>showPrices()}])}])}
+setTimeout(()=>{scrollTo(focus());morning()},500);
 addEventListener('resize',()=>scrollTo(focus(),true));
 })();
 </script>
