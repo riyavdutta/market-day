@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Market Day · prototype</title>
+<title>Market Day</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Market Day: run a stall at a Himalayan hill market. Original cast, original world. */
@@ -13,7 +13,6 @@
 html,body{height:100%}
 body{background:#7cc35a;font-family:var(--font);color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
-.mocknote{position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--b);color:#fff8ea;font:500 12px var(--font);padding:5px 12px;text-align:center}
 
 /* the world */
 .stage{position:fixed;inset:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
@@ -120,7 +119,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
-<div class="mocknote">Prototype · Market Day, an original cozy game for the Lab · not on the live site</div>
 
 <script>
 (function(){
