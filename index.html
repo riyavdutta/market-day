@@ -120,6 +120,11 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .step{width:38px;height:38px;border-radius:50%;border:0;background:var(--honey);font:700 22px/1 var(--font);color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset,0 3px 0 #0000001f}
 .step:active{transform:translateY(2px)}
 .prices .btn{margin-top:12px;width:100%}
+.prow.tg{grid-template-columns:1fr auto}
+.prow.tg small{display:block;font:500 13px var(--font);color:#9a7b62}
+.ptog{border:0;border-radius:999px;padding:8px 16px;font:700 15px var(--font);background:#e9dccb;color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset}
+.ptog[aria-pressed="true"]{background:var(--honey)}
+.trayb{cursor:pointer}
 .toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:999px;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
 @media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
@@ -140,6 +145,9 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 (function(){
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Day 1 is the first market; #day2 is Festival day, with new villagers and new tools
+const DAY=location.hash==='#day2'?2:1,KP=DAY===2?'md2-':'md-';
+if(DAY===2){document.title='Festival day · Market Day';$('.pill.title b').textContent='Festival day'}
 const NS='http://www.w3.org/2000/svg',W=$('#w');
 const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
 const g=(a,p)=>el('g',a||{},p);
@@ -223,15 +231,18 @@ el('rect',{x:sx-220,y:sy-20,width:440,height:150,rx:14,fill:'url(#planks)',class
 el('rect',{x:sx-232,y:sy-38,width:464,height:32,rx:12,fill:'#e0a873',class:'ol'},S);
 // goods on the counter: honey in three sizes, a crate of apples, woollen caps, a Kullu shawl
 const goods=g({id:'goods'},S);
-const ITEMS={},PRICE={};let started=false;
+const ITEMS={},PRICE={};let started=false,charm=false;
+try{charm=DAY===2&&localStorage.getItem(KP+'charm')==='1'}catch(e){}
+// what the villager actually pays: with charm pricing on, every tag ends in 9
+const cost=k=>PRICE[k]-(charm?1:0);
 function good(key,name,short,price,draw,tx){const it=g({class:'goods',tabindex:0,role:'button','aria-label':name},goods);const gi=g({class:'gitem'},it);draw(gi);
   const tg=g({class:'tag',style:'animation-delay:'+(-tx%3)+'s'},it);el('path',{d:`M${tx} ${sy-6} v14`,stroke:'#5b3a2e',"stroke-width":2.5},tg);el('rect',{x:tx-30,y:sy+8,width:60,height:30,rx:8,fill:'#fff8ea',class:'ol',"stroke-width":3},tg);
   const lbl=el('text',{x:tx,y:sy+30,"text-anchor":'middle',style:'font:700 17px Fredoka,sans-serif;fill:#5b3a2e'},tg);
   // before the stall opens, tapping a good opens its price tag; after, it just tells you the price
-  const say=()=>{sfx('tap');if(!started)showPrices(key);else toast(name+' · ₹'+PRICE[key])};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});
+  const say=()=>{sfx('tap');if(!started)showPrices(key);else toast(name+' · ₹'+cost(key))};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});
   ITEMS[key]={name,short,it,lbl};setPrice(key,price,true)}
-function setPrice(k,v,quiet){PRICE[k]=v;ITEMS[k].lbl.textContent='₹'+v;ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+v);
-  if(!quiet)try{localStorage.setItem('md-prices',JSON.stringify(PRICE))}catch(e){}}
+function setPrice(k,v,quiet){PRICE[k]=v;ITEMS[k].lbl.textContent='₹'+cost(k);ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+cost(k));
+  if(!quiet)try{localStorage.setItem(KP+'prices',JSON.stringify(PRICE))}catch(e){}}
 function jar(p,x,h,w){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
 good('small','Small jar of mountain honey','Small honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
 good('medium','Medium jar of mountain honey','Medium honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
@@ -239,10 +250,12 @@ good('large','Large jar of mountain honey','Big honey',400,p=>jar(p,sx-65,72,52)
 good('apples','Crate of Himachali apples','Apples',90,p=>{el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy])=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:dx%20?'#ff4d6d':'#e8336d',class:'ol',"stroke-width":3},p))},sx+27,0);
 good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130,0);
 good('shawl','Kullu shawl','Kullu shawl',900,p=>{el('path',{d:`M${sx+178} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:sx+184,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},sx+206,0);
-try{const sv=JSON.parse(localStorage.getItem('md-prices')||'null');if(sv)for(const k in sv)if(ITEMS[k]&&sv[k]>0)setPrice(k,+sv[k],true)}catch(e){}
+try{const sv=JSON.parse(localStorage.getItem(KP+'prices')||'null');if(sv)for(const k in sv)if(ITEMS[k]&&sv[k]>0)setPrice(k,+sv[k],true)}catch(e){}
 // the cloth over the goods until the stall opens
 const cloth=g({class:'cloth'},S);el('path',{d:`M${sx-225} ${sy-130} h450 v96 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -114 0 z`,fill:'#800020',class:'ol'},cloth);
 el('text',{x:sx,y:sy-80,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#fff8ea'},cloth).textContent='Opening soon!';
+// festival day: a marigold garland along the awning
+if(DAY===2)for(let k=0;k<=22;k++){const x=sx-232+k*21.1,y=sy-212+Math.sin(k/22*Math.PI)*16;el('circle',{cx:x,cy:y,r:9,fill:k%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":2},S)}
 // coin jar
 el('rect',{x:sx+232,y:sy+60,width:40,height:52,rx:12,fill:'#bfe9ff',class:'ol',opacity:.95},S);el('rect',{x:sx+228,y:sy+52,width:48,height:12,rx:5,fill:'#a86b43',class:'ol',"stroke-width":3},S);
 
@@ -252,6 +265,7 @@ const SIGNS=[
  {t:['Only 3','left!'],p:'Scarcity'},
  {t:['Everyone’s','favourite'],p:'Social proof'},
  {t:['Made in','the hills'],p:'Where it comes from'}];
+if(DAY===2)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
 let sign=0;
 const BD=g({class:'board',tabindex:0,role:'button','aria-label':'The chalkboard sign. Tap to change it.'});const bd=g({class:'bd'},BD);
 const bx=430,by=780;sh(bx,by+8,80);
@@ -264,6 +278,23 @@ function drawSign(){l1.textContent=SIGNS[sign].t[0];l2.textContent=SIGNS[sign].t
 drawSign();
 const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();sfx('chalk');tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”')};
 BD.addEventListener('click',nextSign);BD.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();nextSign()}});
+
+/* ---------- festival day: the free-taste tray ---------- */
+let tray=false;const trx=585,trY=850;
+const TR=g({class:'trayb',tabindex:0,role:'button','aria-label':'The free-taste tray. Tap to put it out or cover it.'});
+if(DAY!==2)TR.style.display='none';
+sh(trx,trY+6,50,TR);el('path',{d:`M${trx-30} ${trY} L${trx-22} ${trY-60} M${trx+30} ${trY} L${trx+22} ${trY-60}`,stroke:'#a86b43',"stroke-width":9,"stroke-linecap":'round'},TR);
+el('ellipse',{cx:trx,cy:trY-62,rx:46,ry:12,fill:'#d39561',class:'ol'},TR);
+const trOn=g({},TR),trOff=g({},TR);
+el('ellipse',{cx:trx,cy:trY-72,rx:40,ry:10,fill:'#fff8ea',class:'ol',"stroke-width":3},trOn);
+[-24,-8,8,24].forEach(dx=>el('rect',{x:trx+dx-6,y:trY-92,width:12,height:16,rx:3,fill:'#f2a91c',class:'ol',"stroke-width":2.5},trOn));
+el('rect',{x:trx-48,y:trY-132,width:96,height:28,rx:14,fill:'#ffd34d',class:'ol',"stroke-width":3},trOn);el('text',{x:trx,y:trY-112,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},trOn).textContent='Free taste!';
+el('path',{d:`M${trx-40} ${trY-68} q40 -52 80 0 z`,fill:'#800020',class:'ol',"stroke-width":3},trOff);el('circle',{cx:trx,cy:trY-96,r:6,fill:'#ffd34d',class:'ol',"stroke-width":2.5},trOff);
+const trTap=g({class:'bob'},trOff);el('rect',{x:trx-50,y:trY-148,width:100,height:28,rx:14,fill:'#fff8ea',class:'ol',"stroke-width":3},trTap);el('text',{x:trx,y:trY-128,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},trTap).textContent='Free taste?';
+function drawTray(){trOn.style.display=tray?'':'none';trOff.style.display=tray?'none':''}
+drawTray();
+const toggleTray=()=>{if(open||DAY!==2)return;tray=!tray;drawTray();sfx('clink');toast(tray?'Free tastes are out (₹40 of honey each half-day)':'The tray is covered')};
+TR.addEventListener('click',toggleTray);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleTray()}});
 
 /* ---------- Riya, the stall keeper's friend ---------- */
 function riya(x,y){const r=g({transform:`translate(${x} ${y})`});sh(0,4,34,r);const i=g({class:'bob'},r);
@@ -318,7 +349,30 @@ const CAST={
    el('ellipse',{cx:0,cy:-50,rx:40,ry:34,fill:'#d4622a',class:'ol'},p);el('circle',{cx:0,cy:-104,r:34,fill:'#d4622a',class:'ol'},p);
    el('path',{d:'M-32 -126 l-6 -30 l26 14 z M32 -126 l6 -30 l-26 14 z',fill:'#fff8ea',class:'ol',"stroke-width":3},p);
    el('ellipse',{cx:-16,cy:-98,rx:12,ry:9,fill:'#fff8ea'},p);el('ellipse',{cx:16,cy:-98,rx:12,ry:9,fill:'#fff8ea'},p);el('ellipse',{cx:0,cy:-88,rx:14,ry:10,fill:'#fff8ea'},p);
-   eyes(p,0,-106,.85);el('circle',{cx:0,cy:-92,r:4.5,fill:'#2a1a1e'},p);el('path',{d:'M-14 -66 h28',stroke:'#2f5bff',"stroke-width":9,"stroke-linecap":'round'},p)}}};
+   eyes(p,0,-106,.85);el('circle',{cx:0,cy:-92,r:4.5,fill:'#2a1a1e'},p);el('path',{d:'M-14 -66 h28',stroke:'#2f5bff',"stroke-width":9,"stroke-linecap":'round'},p)}},
+ // festival day
+ cub:{name:'Bo',kind:'a snow leopard cub',c:'#cfd8de',fg:'#2a1a1e',draw(p){legs(p,'#dfe6ea');
+   const tail=g({class:'sway'},p);el('path',{d:'M30 -36 q70 6 64 -60 q-2 -14 -20 -10 q6 46 -44 50 z',fill:'#eef2f4',class:'ol',"stroke-width":3},tail);[[72,-44],[80,-74]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:5,fill:'none',stroke:'#5b6770',"stroke-width":3},tail));
+   el('ellipse',{cx:0,cy:-50,rx:42,ry:34,fill:'#eef2f4',class:'ol'},p);[[-20,-56],[14,-40],[22,-64],[-8,-34]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:6,fill:'none',stroke:'#5b6770',"stroke-width":3},p));
+   el('circle',{cx:-26,cy:-132,r:12,fill:'#eef2f4',class:'ol',"stroke-width":3},p);el('circle',{cx:26,cy:-132,r:12,fill:'#eef2f4',class:'ol',"stroke-width":3},p);
+   el('circle',{cx:0,cy:-104,r:36,fill:'#eef2f4',class:'ol'},p);[[-22,-124],[20,-126],[0,-134]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:3.5,fill:'#5b6770'},p));
+   eyes(p,0,-104,.9);el('path',{d:'M-6 -92 h12 l-6 7 z',fill:'#ff9aa6',class:'ol',"stroke-width":2},p);el('path',{d:'M-8 -80 q8 6 16 0',stroke:'#2a1a1e',"stroke-width":2.5,fill:'none',"stroke-linecap":'round'},p);
+   el('path',{d:'M-30 -72 q30 14 60 0',stroke:'#00a9bd',"stroke-width":8,fill:'none',"stroke-linecap":'round'},p)}},
+ marmot:{name:'Lumi',kind:'a marmot',c:'#c08a4e',fg:'#fff8ea',draw(p){
+   el('ellipse',{cx:0,cy:-60,rx:44,ry:58,fill:'#c08a4e',class:'ol'},p);el('ellipse',{cx:0,cy:-44,rx:28,ry:34,fill:'#ecd2a8'},p);
+   el('circle',{cx:-26,cy:-136,r:9,fill:'#a87440',class:'ol',"stroke-width":3},p);el('circle',{cx:26,cy:-136,r:9,fill:'#a87440',class:'ol',"stroke-width":3},p);
+   el('circle',{cx:0,cy:-116,r:32,fill:'#c08a4e',class:'ol'},p);el('ellipse',{cx:0,cy:-100,rx:16,ry:11,fill:'#ecd2a8'},p);
+   eyes(p,0,-120,.85);el('circle',{cx:0,cy:-106,r:4.5,fill:'#5b3a2e'},p);el('rect',{x:-5,y:-100,width:10,height:9,rx:2,fill:'#fff',class:'ol',"stroke-width":2},p);
+   for(let k=0;k<5;k++)el('circle',{cx:24+Math.cos(k*1.256)*5,cy:-142+Math.sin(k*1.256)*5,r:4.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},p);el('circle',{cx:24,cy:-142,r:3,fill:'#ffd34d'},p);
+   el('ellipse',{cx:-16,cy:-70,rx:9,ry:7,fill:'#a87440',class:'ol',"stroke-width":3},p);el('ellipse',{cx:16,cy:-70,rx:9,ry:7,fill:'#a87440',class:'ol',"stroke-width":3},p);
+   el('path',{d:'M-30 -6 h18 M12 -6 h18',stroke:'#5b3a2e',"stroke-width":8,"stroke-linecap":'round'},p)}},
+ bear:{name:'Gus',kind:'a Himalayan black bear',c:'#2a2422',fg:'#fff8ea',draw(p){legs(p,'#1f1a19');
+   el('ellipse',{cx:0,cy:-58,rx:58,ry:46,fill:'#2a2422',class:'ol'},p);el('path',{d:'M-26 -80 l26 24 l26 -24 l-8 -4 l-18 16 l-18 -16 z',fill:'#fff3d4'},p);
+   el('circle',{cx:-34,cy:-146,r:15,fill:'#2a2422',class:'ol'},p);el('circle',{cx:34,cy:-146,r:15,fill:'#2a2422',class:'ol'},p);
+   el('circle',{cx:0,cy:-116,r:40,fill:'#2a2422',class:'ol'},p);
+   el('ellipse',{cx:-11,cy:-122,rx:8,ry:10,fill:'#fff8ea'},p);el('ellipse',{cx:11,cy:-122,rx:8,ry:10,fill:'#fff8ea'},p);eyes(p,0,-121,.8);
+   el('ellipse',{cx:0,cy:-100,rx:20,ry:14,fill:'#c9a27a',class:'ol',"stroke-width":3},p);el('ellipse',{cx:0,cy:-106,rx:7,ry:5,fill:'#1a1414'},p);
+   el('path',{d:'M-8 -94 q8 6 16 0',stroke:'#1a1414',"stroke-width":2.5,fill:'none',"stroke-linecap":'round'},p)}}};
 function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);
   const em=g({class:'emote'},o);el('path',{d:'M-28 -230 h56 a14 14 0 0 1 14 14 v20 a14 14 0 0 1 -14 14 h-20 l-8 12 l-8 -12 h-20 a14 14 0 0 1 -14 -14 v-20 a14 14 0 0 1 14 -14z',fill:'#fffdf6',class:'ol',"stroke-width":3.5},em);
   const et=el('text',{x:0,y:-196,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},em);return {key,v,o,em,et}}
@@ -354,11 +408,13 @@ const SFX={
   bell(){[0,.4].forEach(t=>{tone(1047,t,1.3,{vol:.12});tone(1568,t,1,{vol:.04});tone(2093,t,.7,{vol:.04})})}, // the lunch bell
   blip(p){tone(p*(.95+Math.random()*.1),0,.035,{type:'square',vol:.018})},                            // each speaker's voice while they talk
   dusk(){[262,330,392,523].forEach((f,i)=>tone(f,i*.13,1.7,{type:'triangle',vol:.08}));tone(659,.6,1.9,{vol:.05})}, // evening chord as the ledger opens
+  clink(){tone(1760,0,.18,{vol:.07});tone(2349,.06,.25,{vol:.05})},                                 // the tray's cups clink
+  spend(){tone(620,0,.16,{type:'triangle',vol:.08,to:420})},                                         // a little money going out
   perfect(){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.7,{type:'triangle',vol:.12}));SFX.coin()}
 };
 function sfx(k,arg){if(muted||!armed||!SFX[k])return;try{SFX[k](arg)}catch(e){}}
 function steps(ms){if(reduce||muted)return;let n=0;const t=setInterval(()=>{sfx('step');if((n+=320)>=ms)clearInterval(t)},320)}
-const VOICE={Riya:620,Pip:520,Juno:820,Nell:980,Kiko:300,Wren:700};
+const VOICE={Riya:620,Pip:520,Juno:820,Nell:980,Kiko:300,Wren:700,Bo:760,Lumi:900,Gus:240};
 const sndBtn=$('#snd');
 function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
 drawSnd();
@@ -374,20 +430,26 @@ const hush=()=>talkEl.classList.add('hide');
 const toastEl=$('#toast');let tt;function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),1800)}
 let money=0;function earn(n,x,y){money+=n;sfx('coin');$('#money').textContent=money;const pu=$('#purse');pu.classList.remove('bump');void pu.offsetWidth;pu.classList.add('bump');
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin'});c.textContent='+₹'+n;setTimeout(()=>c.remove(),1500)}
+let trayCost=0;function spend(n,x,y){money-=n;trayCost+=n;sfx('spend');$('#money').textContent=money;
+  const c=el('text',{x,y,"text-anchor":'middle',class:'coin',style:'fill:#ff8a8a'});c.textContent='−₹'+n;setTimeout(()=>c.remove(),1500)}
 function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');sun.style.transform='translate('+(-(h-9)*80)+'px,'+(Math.max(0,h-13)*26)+'px)'}
 
 /* ---------- the day: each villager has a reason to buy, or not ---------- */
 let open=false,log=[];
-const order=['goat','monal','pika','yak','panda'];
-// each villager has a price limit; the right sign, or the right price beside it, stretches it
-const BEST_DAY=1240;
-function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k];
-  const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:P(k),think,why,note}),no=(think,why,note)=>({think,why,note});
-  if(key==='goat'){const m=P('medium'),L=P('large'),why='The decoy effect';
-    if(L>=2*m&&m<=250)return yes('medium',`₹${L} for the big one? Then the medium jar’s a steal!`,why,`The ₹${L} jar made ₹${m} look like a bargain. With a decoy at twice the price, Pip stretches to ₹250 for the medium.`);
-    const hint=L>=2*m?`₹${m} was past his ₹250 limit, even with the big jar beside it.`:`The big jar wasn’t twice the medium (₹${2*m} or more), so nothing made the medium look cheap. Without a decoy, Pip’s limit is ₹150.`;
-    const pick=m<=150?'medium':P('small')<=150?'small':null;
-    if(pick)return yes(pick,'Hmm, it all looks a bit pricey. I’ll play it safe.',why,`He took the ${pick} jar at ₹${P(pick)}. `+hint);
+const order=DAY===2?['goat','marmot','cub','bear','panda']:['goat','monal','pika','yak','panda'];
+// each villager has a price limit; the right sign, the right price beside it, a free taste or a happy yesterday stretches it
+const BEST_DAY=DAY===2?2355:1240;
+let D1={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{}}catch(e){}
+function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k],C=cost;
+  const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:C(k),think,why,note}),no=(think,why,note)=>({think,why,note});
+  const back=DAY===2?' Win him on Day 1 and he comes back loyal.':'';
+  if(key==='goat'){const m=C('medium'),L=P('large'),why='The decoy effect';
+    if(DAY===2&&D1.goat){if(m<=250)return yes('medium','Back for more of that honey!','Loyalty','Pip bought from you yesterday, so he trusted you today. No decoy needed, up to ₹250.');
+      return no(`₹${m}? Yesterday was better value.`,'Loyalty',`He came back because he trusted you, but ₹${m} was past his ₹250 limit.`)}
+    if(L>=2*P('medium')&&m<=250)return yes('medium',`₹${C('large')} for the big one? Then the medium jar’s a steal!`,why,`The ₹${C('large')} jar made ₹${m} look like a bargain. With a decoy at twice the price, Pip stretches to ₹250 for the medium.`+back);
+    const hint=(L>=2*P('medium')?`₹${m} was past his ₹250 limit, even with the big jar beside it.`:`The big jar wasn’t twice the medium (₹${2*P('medium')} or more), so nothing made the medium look cheap. Without a decoy, Pip’s limit is ₹150.`)+back;
+    const pick=m<=150?'medium':C('small')<=150?'small':null;
+    if(pick)return yes(pick,'Hmm, it all looks a bit pricey. I’ll play it safe.',why,`He took the ${pick} jar at ₹${C(pick)}. `+hint);
     return no('All this honey is too dear for me today.',why,hint)}
   if(key==='monal'){const a=P('apples'),why='Scarcity';
     if(s===1&&a<=150)return yes('apples','Only three left?! I’ll take them before anyone else does!',why,'“Only 3 left” made waiting feel like losing. With it, Juno pays up to ₹150.');
@@ -402,30 +464,53 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
     if(sh<=500)return yes('shawl',`A Kullu shawl for just ₹${sh}? I’ll take that instead!`,why,`The shawl was cheap enough to buy outright. Priced at ₹600 or more, it would have made a pricier cap look small instead.`);
     if(c<=lim)return yes('cap',sh>=600?`The shawl’s ₹${sh}… so a cap at ₹${c} is fair.`:`₹${c} for a cap. Fine.`,why,sh>=600?`The ₹${sh} shawl set the scale. Next to it, Kiko would pay up to ₹${lim} for the cap.`:`With no pricey shawl beside it, his limit for a cap was ₹250.`);
     return no(`₹${c} for a cap? That’s too much.`,why,sh>=600?`Next to the ₹${sh} shawl he’d have paid up to ₹${lim}, but not ₹${c}.`:`At ₹${sh}, the shawl made nothing look small, so his limit was ₹250. A shawl at ₹600 or more raises it.`)}
-  if(key==='panda'){const sm=P('small'),why='Where it comes from';
+  if(key==='panda'){const sm=C('small'),why='Where it comes from',hb=DAY===2?' Win her on Day 1 and she’d come back without needing the sign.':'';
+    if(DAY===2&&D1.panda){if(sm<=200)return yes('small','I know your honey’s local. My usual, please!','Loyalty','Wren bought from you yesterday, so she didn’t need the sign today. Her limit is still ₹200.');
+      return no(`₹${sm} for my usual jar? Not today.`,'Loyalty',`She trusts you now, but ₹${sm} was past her ₹200 limit.`)}
     if(s===3&&sm<=200)return yes('small','Made in the hills? Then it’s made for me.',why,'Wren buys local. Saying where it’s made won her over, at up to ₹200 for the small jar.');
-    if(s===3)return no(`Local honey! But ₹${sm} for a small jar…`,why,`The sign won her; the price didn’t. Her limit for the small jar is ₹200.`);
-    return no('Hmm, where’s this from? Never mind.',why,'She wanted to know it was local. “Made in the hills” would have won her.')}}
+    if(s===3)return no(`Local honey! But ₹${sm} for a small jar…`,why,`The sign won her; the price didn’t. Her limit for the small jar is ₹200.`+hb);
+    return no('Hmm, where’s this from? Never mind.',why,'She wanted to know it was local. “Made in the hills” would have won her.'+hb)}
+  // festival day
+  if(key==='marmot'){const m=C('medium'),why='Reciprocity';
+    if(tray&&m<=300)return yes('medium','You gave me a taste… I’d feel rude not to buy!',why,'A free taste made Lumi want to give something back. With it, she pays up to ₹300 for the medium jar.');
+    if(tray)return no(`That was lovely… but ₹${m}? I can’t.`,why,`The free taste warmed her up, but ₹${m} was past her ₹300 limit.`);
+    if(m<=120)return yes('medium',`Only ₹${m}? I’ll risk it.`,why,'She took a chance because it was cheap. A free taste would have let you charge up to ₹300.');
+    return no('Is it any good? I can’t tell without trying.',why,'Lumi won’t buy honey she hasn’t tasted. Put out the free-taste tray and she’d pay up to ₹300.')}
+  if(key==='cub'){const sw=C('shawl'),why='Loss aversion';
+    if(s===4&&sw<=1200)return yes('shawl','Last day?! I can’t miss out on a Kullu shawl!',why,`“Last day of the season” made not buying feel like losing it. With it, Bo pays up to ₹1,200.`);
+    if(s===4)return no(`I’d hate to miss it… but ₹${sw}!`,why,`The sign worked on him, but ₹${sw} was past his ₹1,200 limit.`);
+    if(sw<=600)return yes('shawl',`A Kullu shawl for ₹${sw}? Yes please!`,why,'He bought because it was cheap. “Last day of the season” would have let you charge up to ₹1,200.');
+    return no('What a lovely shawl. Maybe next week.',why,'Bo thought he could come back any time. “Last day of the season” would have made waiting feel like a loss.')}
+  if(key==='bear'){const L=C('large'),why='Charm pricing';
+    if(tray)return no('Free honey! Mmm… I’m too full to buy anything now.',why,'Gus ate the free tastes and left full. Cover the tray at lunch, before he comes.');
+    if(charm&&L<=499)return yes('large',`Only ₹${L}? That’s practically ₹${Math.floor(L/100)*100}!`,why,'A price ending in 9 feels a whole step cheaper. With it, Gus pays up to ₹499 for the big jar.');
+    if(charm)return no(`₹${L}, even ending in 9, is too much.`,why,`Prices ending in 9 worked on him, but not past ₹499.`);
+    if(L<=300)return yes('large',`₹${L} for the big jar? Done.`,why,'He bought because it was cheap. With prices ending in 9, he’d have paid up to ₹499.');
+    return no(`₹${L} for honey? That sounds like a lot.`,why,'A round price felt expensive to Gus, so his limit was ₹300. Turn on “End prices in 9” and he’d pay ₹499.')}}
 const step=v=>v<200?10:50;
 function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.innerHTML='';
+  if(DAY===2){const r=document.createElement('div');r.className='prow tg';r.innerHTML='<b>End prices in 9<small>₹199, not ₹200</small></b><button class="ptog" type="button" aria-pressed="'+charm+'">'+(charm?'On':'Off')+'</button>';
+    r.querySelector('.ptog').onclick=()=>{charm=!charm;try{localStorage.setItem(KP+'charm',charm?'1':'0')}catch(e){}for(const q in ITEMS)setPrice(q,PRICE[q],true);sfx('tap');showPrices(k)};pl.appendChild(r)}
   ['small','medium','large','apples','cap','shawl'].forEach(key=>{const r=document.createElement('div');r.className='prow'+(key===k?' hi':'');
-    r.innerHTML='<b>'+ITEMS[key].short+'</b><button class="step" type="button" aria-label="Lower the '+ITEMS[key].short+' price">−</button><output>₹'+PRICE[key]+'</output><button class="step" type="button" aria-label="Raise the '+ITEMS[key].short+' price">+</button>';
+    r.innerHTML='<b>'+ITEMS[key].short+'</b><button class="step" type="button" aria-label="Lower the '+ITEMS[key].short+' price">−</button><output>₹'+cost(key)+'</output><button class="step" type="button" aria-label="Raise the '+ITEMS[key].short+' price">+</button>';
     const [dn,up]=r.querySelectorAll('.step'),out=r.querySelector('output');
-    const go=d=>{const v=PRICE[key],nv=Math.max(10,Math.min(2000,d>0?v+step(v):v-step(v-1)));setPrice(key,nv);out.textContent='₹'+nv;sfx('tap')};
+    const go=d=>{const v=PRICE[key],nv=Math.max(10,Math.min(2000,d>0?v+step(v):v-step(v-1)));setPrice(key,nv);out.textContent='₹'+cost(key);sfx('tap')};
     dn.onclick=()=>go(-1);up.onclick=()=>go(1);pl.appendChild(r);if(key===k)setTimeout(()=>up.focus(),50)});
   $('#prices').classList.add('on')}
 $('#pdone').onclick=()=>{sfx('tap');$('#prices').classList.remove('on');scrollTo(focus());morning()};
-let morningSign=0,lunched=false,paused=false;
-function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+let morningSign=0,morningTray=false,lunched=false,paused=false;
+function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;morningTray=tray;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+  if(tray)setTimeout(()=>spend(40,trx,trY-150),700);
   let h=9,m=0;clock(h,m);const tick=setInterval(()=>{if(paused)return;m+=30;if(m>=60){m=0;h++}clock(h,m);document.documentElement.style.setProperty('--dusk',Math.max(0,(h-14)/5*.45))},3000);
   const cast=order.map(villager);let i=0;
-  // lunchtime: the one chance to change the sign for the afternoon shoppers
+  // lunchtime: one chance to change things for the afternoon shoppers
   function lunch(){lunched=true;paused=true;sfx('bell');h=13;m=0;clock(h,m);open=false;
-    const sold=log.filter(l=>l.buy).length;
-    talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. Kiko and Wren come by this afternoon. Want to change the sign for them?',[
-      {t:'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea','Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
+    const sold=log.filter(l=>l.buy).length,aft=order.slice(3).map(k=>CAST[k].name).join(' and ');
+    talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. '+aft+' come by this afternoon. '+(DAY===2?'Want to change the sign or the tasting tray?':'Want to change the sign for them?'),[
+      {t:DAY===2?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',DAY===2?'Tap the chalkboard or the tasting tray to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
       {t:'Keep it',soft:true,fn:resume}])}
-  function resume(){open=true;paused=false;tapme.style.display='none';hush();scrollTo(sx);if(sign!==morningSign)toast('Afternoon sign: “'+SIGNS[sign].t.join(' ')+'”');setTimeout(nextOne,600)}
+  function resume(){open=true;paused=false;tapme.style.display='none';hush();scrollTo(sx);if(sign!==morningSign)toast('Afternoon sign: “'+SIGNS[sign].t.join(' ')+'”');
+    if(tray)setTimeout(()=>spend(40,trx,trY-150),300);setTimeout(nextOne,600)}
   function nextOne(){if(i===3&&!lunched)return lunch();
     if(i>=cast.length){setTimeout(()=>{clearInterval(tick);clock(17,30);document.documentElement.style.setProperty('--dusk',.5);endDay()},1200);return}
     const v=cast[i++],d=decide(v.key);
@@ -440,25 +525,36 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');mornin
 const narrow=()=>$('#stage').clientWidth<W.getBoundingClientRect().width*.45;
 const focus=()=>!open&&narrow()?bx+60:sx;
 function scrollTo(x,now){const stg=$('#stage'),sc=W.getBoundingClientRect().width/1600;stg.scrollTo({left:x*sc-stg.clientWidth/2,behavior:reduce||now?'auto':'smooth'})}
+const toDay=d=>{if(d===2)location.hash='day2';else history.replaceState(null,'',location.pathname+location.search);location.reload()};
 
 /* ---------- dusk: the ledger ---------- */
 function endDay(){const sold=log.filter(l=>l.buy);
-  $('#lp').innerHTML='<small>Market Day · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
-    '<div class="total"><span>Takings</span><span>₹'+money+'</span></div>';
+  // Day 1 is remembered: whoever bought comes back loyal on Festival day
+  if(DAY===1)try{localStorage.setItem('md-d1',JSON.stringify({goat:log.some(l=>l.key==='goat'&&l.buy),panda:log.some(l=>l.key==='panda'&&l.buy)}))}catch(e){}
+  $('#lp').innerHTML='<small>'+(DAY===2?'Festival day':'Market Day')+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
+    (trayCost?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+trayCost+'</span></div>':'')+
+    '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
-  $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Play another day',()=>location.reload()]].forEach(([t,f])=>{const b=document.createElement('button');b.className='btn';b.textContent=t;b.onclick=f;$('#la').appendChild(b)});
+  const trayNote=DAY!==2?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
+  $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
+  $('#la').innerHTML='';(DAY===2?[['Play Festival day again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
+    .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
-  let best=money;try{best=Math.max(money,+(localStorage.getItem('md-best')||0));localStorage.setItem('md-best',best)}catch(e){}
+  let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
   $('#sum').textContent=(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
     :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
+    :DAY===2?n+' of 5 villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
     :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
     (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
   hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
 
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
-function morning(){talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Set the prices, choose what the chalkboard says, then open up.',[{t:'Open the stall',fn:run},{t:'Set prices',soft:true,fn:()=>showPrices()},{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},{t:'Set prices',soft:true,fn:()=>showPrices()}])}])}
+function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()};
+  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}]);
+  const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
+  if(Object.keys(D1).length)b.push({t:'Festival day →',soft:true,fn:()=>toDay(2)});
+  talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
 setTimeout(()=>{scrollTo(focus());morning()},500);
 addEventListener('resize',()=>scrollTo(focus(),true));
 })();
