@@ -107,6 +107,15 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .why .principle{margin:0 0 4px}
 .total{display:flex;justify-content:space-between;margin-top:12px;font:700 22px var(--font);color:var(--b)}
 .sum{margin:14px 6px 0;color:#fff8ea;font:600 18px/1.4 var(--font);text-align:center}
+.post{position:fixed;inset:0;z-index:70;background:#2a1a1ef2;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px;perspective:1600px}
+.post.on{display:flex}
+.card3d{width:min(760px,100%,calc((100vh - 170px) * 1.5));aspect-ratio:3/2;position:relative;transform-style:preserve-3d;transition:transform .8s var(--spring);cursor:pointer;animation:open .6s var(--spring)}
+.card3d.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;overflow:hidden;background:#fffaf0;box-shadow:0 0 0 6px #fffaf0,0 0 0 10px var(--ink),0 18px 30px #0007}
+.face svg{width:100%;height:100%;display:block}
+.face.back{transform:rotateY(180deg)}
+.flipnote{color:#fff8ea;font:500 15px var(--font);margin:6px 0 0}
+.post .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .book .acts{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .prices{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:45;width:min(440px,calc(100% - 20px));max-height:calc(100vh - 90px);overflow:auto;background:var(--paper);border-radius:28px;padding:18px 20px 16px;box-shadow:0 0 0 5px var(--ink),0 10px 0 5px #0000001f;display:none}
 .prices.on{display:block;animation:open .45s var(--spring)}
@@ -153,6 +162,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 <div class="prices" id="prices" role="dialog" aria-label="Price tags"><h3>Price tags</h3><small>Every villager has a limit. The right sign, or the right price beside it, can stretch it.</small><div id="plist"></div><button class="btn" id="pdone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
+<div class="post" id="post" role="dialog" aria-modal="true" aria-label="Your postcard"><div class="card3d" id="card3d" role="button" tabindex="0" aria-label="Your postcard. Tap to turn it over."><div class="face front" id="pf"></div><div class="face back" id="pb"></div></div><p class="flipnote">Tap the card to turn it over</p><div class="acts" id="pa"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
 
 <script>
@@ -705,7 +715,7 @@ function endDay(){const sold=log.filter(l=>l.buy);
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';(WINTER?[['Play winter again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:FEST?[['Play Festival day again',()=>location.reload()],['On to Winter market →',()=>toDay(3)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
+  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard]].concat(WINTER?[['Play winter again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:FEST?[['Play Festival day again',()=>location.reload()],['On to Winter market →',()=>toDay(3)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
@@ -716,6 +726,84 @@ function endDay(){const sold=log.filter(l=>l.buy);
     :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
     (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
   hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
+
+/* ---------- dusk: a postcard to keep ---------- */
+const PV={x:270,y:230,w:1005,h:670};              // the part of the market the front shows
+function postFront(){const f=W.cloneNode(true);f.removeAttribute('class');f.removeAttribute('id');f.setAttribute('viewBox',`${PV.x} ${PV.y} ${PV.w} ${PV.h}`);f.setAttribute('preserveAspectRatio','xMidYMid slice');f.setAttribute('aria-hidden','true');
+  f.querySelectorAll('.walker,.dusk,.coin,.cloth').forEach(e=>e.remove());
+  f.querySelectorAll('text').forEach(t=>{if(['tap!','Free taste?','Bundle?'].includes(t.textContent))t.parentNode.remove()});
+  // everyone who bought from you poses in front of the stall
+  const buyers=log.filter(l=>l.buy),row=g({},f),gap=128,x0=720-(buyers.length-1)*gap/2;
+  buyers.forEach((l,i)=>{const v=g({transform:`translate(${x0+i*gap} ${856+(i%2)*10}) scale(.82)`},row);sh(0,6,40,v);CAST[l.key].draw(v)});
+  // greetings from…
+  const bn=g({},f),bx0=PV.x+28,by0=PV.y+26;el('rect',{x:bx0,y:by0,width:430,height:104,rx:24,fill:'#fffaf0',class:'ol'},bn);
+  el('text',{x:bx0+26,y:by0+40,style:'font:500 24px Fredoka,sans-serif;fill:#9a7b62'},bn).textContent='Greetings from the';
+  el('text',{x:bx0+26,y:by0+86,style:'font:700 44px Fredoka,sans-serif;fill:#800020'},bn).textContent=DAYNAME[DAY];
+  return f}
+// what worked, in everyday words rather than marketing terms
+const PLAIN={'The decoy effect':'a big jar that made the medium one look cheap','Scarcity':'saying only 3 were left','Social proof':'letting them see others buying','Anchoring':'a pricey shawl beside the caps',
+  'Where it comes from':'saying it was made in the hills','Loyalty':'old customers coming back','Reciprocity':'free tastes','Loss aversion':'calling it the last day of the season',
+  'Charm pricing':'prices ending in 9','Bundling':'a chai and walnut bundle','A good cause':'giving a child a book with each sale','Framing':'shawls that last 10 winters'};
+function wrapText(t,n){const w=t.split(' '),out=[];let line='';w.forEach(x=>{if((line+' '+x).trim().length>n){out.push(line.trim());line=x}else line+=' '+x});if(line.trim())out.push(line.trim());return out}
+function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('viewBox','0 0 1005 670');b.setAttribute('aria-hidden','true');
+  const sold=log.filter(l=>l.buy),best=sold.slice().sort((a,c)=>c.n-a.n)[0];
+  el('rect',{x:0,y:0,width:1005,height:670,fill:'#fffaf0'},b);
+  for(let k=0;k<7;k++)el('path',{d:`M${30+k*140} 640 l40 -6`,stroke:'#f1e4cc',"stroke-width":2},b);
+  el('path',{d:'M600 70 V600',stroke:'#d9c4a5',"stroke-width":3},b);
+  // the note, in the shopkeeper's words
+  const msg=['Dear friend,'].concat(wrapText(`Today I minded Riya’s stall at the ${DAYNAME[DAY].toLowerCase()}.`,30),
+    wrapText(`${sold.length} of 5 villagers bought from me, and I took ₹${money.toLocaleString('en-IN')}.`,30),
+    best?wrapText(`What worked best: ${PLAIN[best.why]||best.why.toLowerCase()}.`,30):['Nobody bought today. Tomorrow!'],
+    ['','Come and see if you can beat me!']);
+  msg.forEach((t,i)=>{el('text',{x:56,y:112+i*46,style:`font:${i?400:600} 29px Fredoka,sans-serif;fill:#5b3a2e`},b).textContent=t});
+  // a stamp with your best customer on it
+  const stx=812,sty=60,sw=150,shh=184,STC=['','#bfe6a8','#ffd2a1','#d7e8f5'][DAY];
+  el('rect',{x:stx,y:sty,width:sw,height:shh,fill:'#fff'},b);
+  for(let k=0;k<=10;k++){[[stx+k*sw/10,sty],[stx+k*sw/10,sty+shh]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:5,fill:'#fffaf0'},b))}
+  for(let k=0;k<=12;k++){[[stx,sty+k*shh/12],[stx+sw,sty+k*shh/12]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:5,fill:'#fffaf0'},b))}
+  el('rect',{x:stx+12,y:sty+12,width:sw-24,height:shh-24,fill:STC,stroke:'#5b3a2e',"stroke-width":2.5},b);
+  if(best){const m=g({transform:`translate(${stx+sw/2} ${sty+140}) scale(.5)`},b);CAST[best.key].draw(m)}else el('circle',{cx:stx+sw/2,cy:sty+80,r:34,fill:'#ffd34d',class:'ol'},b);
+  el('text',{x:stx+sw/2,y:sty+shh-22,"text-anchor":'middle',style:'font:700 16px Fredoka,sans-serif;fill:#800020'},b).textContent='₹'+(best?best.n:0).toLocaleString('en-IN');
+  // the postmark
+  const pm=g({opacity:.75},b);el('circle',{cx:760,cy:150,r:62,fill:'none',stroke:'#800020',"stroke-width":4},pm);el('circle',{cx:760,cy:150,r:50,fill:'none',stroke:'#800020',"stroke-width":2},pm);
+  el('text',{x:760,y:140,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#800020;letter-spacing:1px'},pm).textContent='MARKET DAY';
+  el('text',{x:760,y:168,"text-anchor":'middle',style:'font:600 15px Fredoka,sans-serif;fill:#800020'},pm).textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+  for(let k=0;k<4;k++)el('path',{d:`M${618} ${118+k*20} q20 -8 40 0 t40 0`,fill:'none',stroke:'#800020',"stroke-width":3},pm);
+  // the address: where to play
+  [380,450,520].forEach(y=>el('path',{d:`M640 ${y} H960`,stroke:'#d9c4a5',"stroke-width":2.5},b));
+  el('text',{x:644,y:370,style:'font:500 24px Fredoka,sans-serif;fill:#5b3a2e'},b).textContent='To: someone who’d enjoy this';
+  el('text',{x:644,y:440,style:'font:600 23px Fredoka,sans-serif;fill:#800020'},b).textContent='Play it at';
+  el('text',{x:644,y:510,style:'font:600 22px Fredoka,sans-serif;fill:#800020'},b).textContent=location.host+'/';
+  el('text',{x:56,y:612,style:'font:500 17px Fredoka,sans-serif;fill:#9a7b62'},b).textContent='Market Day · a little game by Riya Dutta';
+  return b}
+let fontCSS=null;
+// the saved picture can't use the page's web font, so the font is folded into it
+async function embedFont(){if(fontCSS!==null)return fontCSS;fontCSS='';
+  try{const css=await (await fetch('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap')).text();
+    const blocks=css.split('@font-face').filter(b=>/\/\* latin \*\//.test(css)&&/U\+0000-00FF/.test(b));
+    const seen={};for(const blk of blocks){const u=(blk.match(/url\(([^)]+)\)/)||[])[1],w=(blk.match(/font-weight:\s*([\d ]+)/)||[])[1]||'400';if(!u)continue;
+      if(!seen[u]){const bl=await (await fetch(u)).blob();seen[u]=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(bl)})}
+      fontCSS+=`@font-face{font-family:'Fredoka';font-weight:${w.trim()};src:url(${seen[u]}) format('woff2')}`}}catch(e){fontCSS=''}
+  return fontCSS}
+const EXPORT_CSS=`.ol{stroke:#5b3a2e;stroke-width:4;stroke-linejoin:round;stroke-linecap:round}.chalk{font:600 26px Fredoka,sans-serif;fill:#fff8ea}.shimmer{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-dasharray:18 60;opacity:.75}.petal{fill:#ff7aa2}.snow{fill:#fff}.glowl{opacity:.6}.fwk{opacity:${FEST?1:0}}.smoke circle,.steam circle{opacity:0}`;
+async function toImage(svg,w,h){const c=svg.cloneNode(true);c.setAttribute('xmlns',NS);c.setAttribute('width',w);c.setAttribute('height',h);
+  c.querySelectorAll('.snow,.petal,.conf').forEach(e=>{const y=PV.y+40+Math.random()*560;e.setAttribute(e.tagName==='rect'?'y':'cy',y)});
+  const st=document.createElementNS(NS,'style');st.textContent=(await embedFont())+EXPORT_CSS;c.insertBefore(st,c.firstChild);
+  const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(c));await img.decode();return img}
+async function postcardBlob(){const front=$('#pf svg'),back=$('#pb svg'),W2=1200,H2=800,pad=50;
+  const cv=document.createElement('canvas');cv.width=W2+pad*2;cv.height=H2*2+pad*3;const x=cv.getContext('2d');
+  x.fillStyle=['','#dcefc9','#ffe1c2','#e3eef7'][DAY];x.fillRect(0,0,cv.width,cv.height);
+  const [fi,bi]=await Promise.all([toImage(front,W2,H2),toImage(back,W2,H2)]);
+  [[fi,pad],[bi,pad*2+H2]].forEach(([im,y])=>{x.save();x.fillStyle='#0003';x.fillRect(pad+8,y+12,W2,H2);x.fillStyle='#fffaf0';x.fillRect(pad-12,y-12,W2+24,H2+24);x.drawImage(im,pad,y,W2,H2);x.restore()});
+  return new Promise(r=>cv.toBlob(r,'image/png'))}
+function showPostcard(){const pf=$('#pf'),pb=$('#pb'),card=$('#card3d');pf.innerHTML='';pb.innerHTML='';pf.appendChild(postFront());pb.appendChild(postBack());card.classList.remove('flip');
+  const flip=()=>{card.classList.toggle('flip');sfx('tap')};card.onclick=flip;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}};
+  const pa=$('#pa');pa.innerHTML='';const add=(t,fn,soft)=>{const b=document.createElement('button');b.className='btn'+(soft?' soft':'');b.type='button';b.textContent=t;b.onclick=()=>{sfx('tap');fn(b)};pa.appendChild(b)};
+  const name='market-day-postcard.png';
+  add('Save postcard',async b=>{b.textContent='Making it…';try{const bl=await postcardBlob(),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Postcard saved')}catch(e){toast('Sorry, the postcard couldn’t be saved')}b.textContent='Save postcard'});
+  if(navigator.canShare)add('Share',async b=>{try{const bl=await postcardBlob(),file=new File([bl],name,{type:'image/png'});if(navigator.canShare({files:[file]}))await navigator.share({files:[file],title:'Market Day',text:'My day minding a stall at the hill market'});else toast('Sharing isn’t available here. Try Save postcard.')}catch(e){}},true);
+  add('Back to the ledger',()=>$('#post').classList.remove('on'),true);
+  $('#post').classList.add('on');sfx('clink');embedFont()}
 
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
