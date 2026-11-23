@@ -751,7 +751,7 @@ function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('v
   for(let k=0;k<7;k++)el('path',{d:`M${30+k*140} 640 l40 -6`,stroke:'#f1e4cc',"stroke-width":2},b);
   el('path',{d:'M600 70 V600',stroke:'#d9c4a5',"stroke-width":3},b);
   // the note, in the shopkeeper's words
-  const msg=['Dear friend,'].concat(wrapText(`Today I minded Riya’s stall at the ${DAYNAME[DAY].toLowerCase()}.`,30),
+  const msg=['Dear friend,'].concat(wrapText(`Today I minded a stall at the ${DAYNAME[DAY].toLowerCase()}.`,30),
     wrapText(`${sold.length} of 5 villagers bought from me, and I took ₹${money.toLocaleString('en-IN')}.`,30),
     best?wrapText(`What worked best: ${PLAIN[best.why]||best.why.toLowerCase()}.`,30):['Nobody bought today. Tomorrow!'],
     ['','Come and see if you can beat me!']);
@@ -774,7 +774,6 @@ function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('v
   el('text',{x:644,y:370,style:'font:500 24px Fredoka,sans-serif;fill:#5b3a2e'},b).textContent='To: someone who’d enjoy this';
   el('text',{x:644,y:440,style:'font:600 23px Fredoka,sans-serif;fill:#800020'},b).textContent='Play it at';
   el('text',{x:644,y:510,style:'font:600 22px Fredoka,sans-serif;fill:#800020'},b).textContent=location.host+'/';
-  el('text',{x:56,y:612,style:'font:500 17px Fredoka,sans-serif;fill:#9a7b62'},b).textContent='Market Day · a little game by Riya Dutta';
   return b}
 let fontCSS=null;
 // the saved picture can't use the page's web font, so the font is folded into it
