@@ -93,9 +93,9 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 /* the ledger: a red cloth bahi-khata */
 .ledger{position:fixed;inset:0;z-index:60;background:#2a1a1e99;display:none;align-items:center;justify-content:center;padding:16px}
 .ledger.on{display:flex}
-.book{width:min(940px,100%);max-height:calc(100vh - 60px);overflow:auto;background:#b3122e;border-radius:26px;padding:16px;box-shadow:0 0 0 5px var(--ink),0 14px 0 5px #0000002a;animation:open .6s var(--spring)}
+.book{width:min(940px,100%);max-height:calc(100dvh - 40px);overflow:hidden;display:flex;flex-direction:column;background:#b3122e;border-radius:26px;padding:16px;box-shadow:0 0 0 5px var(--ink),0 14px 0 5px #0000002a;animation:open .6s var(--spring)}
 @keyframes open{from{transform:scale(.8) rotate(-4deg);opacity:0}}
-.pages{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff6e0;border-radius:16px;box-shadow:0 0 0 4px var(--ink)}
+.pages{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1 1 auto;min-height:0;overflow:auto;background:#fff6e0;border-radius:16px;box-shadow:0 0 0 4px var(--ink)}
 .page{padding:22px 24px;background:repeating-linear-gradient(transparent 0 33px,#e9d7b4 33px 34px)}
 .page h2{font:700 28px var(--font);color:var(--b);margin-bottom:6px}
 .page small{font:600 13px var(--font);color:#9a7b62}
@@ -106,7 +106,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .why{padding:10px 0;border-bottom:2px dashed #e0c89e;font:500 16px/1.4 var(--font)}
 .why .principle{margin:0 0 4px}
 .total{display:flex;justify-content:space-between;margin-top:12px;font:700 22px var(--font);color:var(--b)}
-.sum{margin:14px 6px 0;color:#fff8ea;font:600 18px/1.4 var(--font);text-align:center}
+.sum{flex:none;margin:12px 6px 0;color:#fff8ea;font:600 18px/1.4 var(--font);text-align:center}
 .post{position:fixed;inset:0;z-index:70;background:#2a1a1ef2;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px;perspective:1600px}
 .post.on{display:flex}
 .card3d{width:min(760px,100%,calc((100vh - 170px) * 1.5));aspect-ratio:3/2;position:relative;transform-style:preserve-3d;transition:transform .8s var(--spring);cursor:pointer;animation:open .6s var(--spring)}
@@ -116,7 +116,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .face.back{transform:rotateY(180deg)}
 .flipnote{color:#fff8ea;font:500 15px var(--font);margin:6px 0 0}
 .post .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.book .acts{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.book .acts{flex:none;display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 .prices{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:45;width:min(440px,calc(100% - 20px));max-height:calc(100vh - 90px);overflow:auto;background:var(--paper);border-radius:28px;padding:18px 20px 16px;box-shadow:0 0 0 5px var(--ink),0 10px 0 5px #0000001f;display:none}
 .prices.on{display:block;animation:open .45s var(--spring)}
 @media (min-width:1000px){.prices{left:auto;right:20px;translate:none;width:400px}}
@@ -136,7 +136,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .trayb{cursor:pointer}
 .toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:22px;max-width:min(520px,calc(100% - 24px));text-align:center;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
-@media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
+@media (max-width:700px){.pages{grid-template-columns:1fr}.sum{font-size:15px}.book .acts .btn{padding:10px 16px;font-size:15px}.ledger{padding:10px}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
 .snow{fill:#fff;animation:snowfall 12s linear infinite}
 @keyframes snowfall{0%{transform:translate(0,-40px)}100%{transform:translate(-90px,1080px)}}
 .conf{animation:fall 9s linear infinite}
@@ -715,7 +715,7 @@ function endDay(){const sold=log.filter(l=>l.buy);
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard]].concat(WINTER?[['Play winter again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:FEST?[['Play Festival day again',()=>location.reload()],['On to Winter market →',()=>toDay(3)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
+  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
