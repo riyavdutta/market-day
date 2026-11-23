@@ -128,6 +128,15 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:999px;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
 @media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
+.snow{fill:#fff;animation:snowfall 12s linear infinite}
+@keyframes snowfall{0%{transform:translate(0,-40px)}100%{transform:translate(-90px,1080px)}}
+.conf{animation:fall 9s linear infinite}
+.glowl{opacity:calc(.3 + var(--dusk) * 1.5);pointer-events:none}
+.ferris{transform-box:fill-box;transform-origin:center;animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steam circle{fill:#fff;opacity:0;transform-box:fill-box;animation:steam 2.6s ease-out infinite}
+.steam circle:nth-child(2){animation-delay:.9s}.steam circle:nth-child(3){animation-delay:1.8s}
+@keyframes steam{0%{opacity:.8;transform:translateY(0) scale(.7)}100%{opacity:0;transform:translateY(-46px) scale(1.6)}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -146,8 +155,9 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Day 1 is the first market; #day2 is Festival day, with new villagers and new tools
-const DAY=location.hash==='#day2'?2:1,KP=DAY===2?'md2-':'md-';
-if(DAY===2){document.title='Festival day · Market Day';$('.pill.title b').textContent='Festival day'}
+const DAY={'#day2':2,'#day3':3}[location.hash]||1,KP=DAY===1?'md-':'md'+DAY+'-',FEST=DAY===2,WINTER=DAY===3;
+const DAYNAME=['','Market Day','Festival day','Winter market'];
+if(DAY>1){document.title=DAYNAME[DAY]+' · Market Day';$('.pill.title b').textContent=DAYNAME[DAY]}
 const NS='http://www.w3.org/2000/svg',W=$('#w');
 const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
 const g=(a,p)=>el('g',a||{},p);
@@ -165,6 +175,8 @@ defs.innerHTML=`
 <pattern id="planks" width="40" height="22" patternUnits="userSpaceOnUse"><rect width="40" height="22" fill="#d39561"/><path d="M0 21 h40 M18 0 v21" stroke="#a86b43" stroke-width="2"/><circle cx="8" cy="10" r="1.6" fill="#a86b43"/></pattern>
 <pattern id="stripe" width="60" height="10" patternUnits="userSpaceOnUse"><rect width="30" height="10" fill="#800020"/><rect x="30" width="30" height="10" fill="#fff8ea"/></pattern>`;
 
+if(WINTER){defs.querySelector('#sky').innerHTML='<stop offset="0" stop-color="#b9d3e8"/><stop offset="1" stop-color="#f4efe8"/>';
+  defs.querySelector('#lawn').innerHTML='<rect width="100" height="100" fill="#f4f7fb"/><rect width="50" height="50" fill="#eaf0f6"/><rect x="50" y="50" width="50" height="50" fill="#eaf0f6"/><circle cx="22" cy="28" r="2.5" fill="#d3dfea"/><circle cx="74" cy="78" r="2.5" fill="#d3dfea"/><circle cx="80" cy="20" r="2" fill="#d3dfea"/>'}
 /* ---------- sky, peaks, terraces ---------- */
 el('rect',{x:0,y:0,width:1600,height:300,fill:'url(#sky)'});
 const sun=g({class:'sun'});el('circle',{cx:1390,cy:90,r:56,fill:'#ffd34d',class:'ol'},sun);
@@ -172,47 +184,75 @@ const sun=g({class:'sun'});el('circle',{cx:1390,cy:90,r:56,fill:'#ffd34d',class:
 const st=document.createElement('style');st.textContent='@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(1800px)}}';document.head.appendChild(st);
 el('path',{d:'M0 250 L120 150 L200 190 L330 80 L430 170 L560 110 L690 200 L820 90 L950 180 L1080 70 L1220 170 L1350 100 L1480 180 L1600 130 L1600 300 L0 300Z',fill:'#b9c6ec',class:'ol'});
 [[330,80],[820,90],[1080,70],[1350,100]].forEach(([x,y])=>el('path',{d:`M${x} ${y} l-30 40 l14 -4 l16 14 l14 -14 l14 4 z`,fill:'#fff'}));
-el('path',{d:'M0 290 C 200 230, 400 270, 600 240 S 1000 250, 1200 230 S 1500 260, 1600 240 L1600 330 L0 330Z',fill:'#6db35a',class:'ol'});
+el('path',{d:'M0 290 C 200 230, 400 270, 600 240 S 1000 250, 1200 230 S 1500 260, 1600 240 L1600 330 L0 330Z',fill:WINTER?'#e4ecf3':'#6db35a',class:'ol'});
 // deodars on the far terrace
-function deodar(x,y,s){const t=g({class:'sway',style:'animation-delay:'+(-x%4)+'s'});for(let k=0;k<3;k++)el('path',{d:`M${x-30*s+k*6*s} ${y-k*22*s} L${x} ${y-46*s-k*22*s} L${x+30*s-k*6*s} ${y-k*22*s}Z`,fill:k%2?'#2f7a52':'#3a8c5f',class:'ol'},t)}
+function deodar(x,y,s){const t=g({class:'sway',style:'animation-delay:'+(-x%4)+'s'});for(let k=0;k<3;k++)el('path',{d:`M${x-30*s+k*6*s} ${y-k*22*s} L${x} ${y-46*s-k*22*s} L${x+30*s-k*6*s} ${y-k*22*s}Z`,fill:k%2?'#2f7a52':'#3a8c5f',class:'ol'},t);
+  if(WINTER)for(let k=0;k<3;k++)el('path',{d:`M${x-12*s} ${y-26*s-k*22*s} L${x} ${y-46*s-k*22*s} L${x+12*s} ${y-26*s-k*22*s} q-6 5 -12 0 q-6 5 -12 0Z`,fill:'#fff'},t)}
 [[60,300,.8],[140,290,.9],[470,280,.8],[540,295,.7],[1180,285,.8],[1260,295,.9],[1520,285,.8]].forEach(a=>deodar(...a));
 
+if(FEST){
+  [[300,'#d02b8f'],[680,'#2f5bff']].forEach(([x,c])=>{el('path',{d:`M${x-44} 306 L${x} 248 L${x+44} 306 Z`,fill:'#fff8ea'});[-1,1].forEach(k=>el('path',{d:`M${x+k*14} 306 L${x} 248 L${x+k*30} 306 Z`,fill:c}));
+    el('path',{d:`M${x-44} 306 L${x} 248 L${x+44} 306 Z`,fill:'none',class:'ol',"stroke-width":3});el('path',{d:`M${x} 248 v-20`,stroke:'#7a5a44',"stroke-width":3});el('path',{d:`M${x} 228 l18 6 l-18 6 z`,fill:'#ffd34d',class:'flag'})});
+  const fw=g({});el('path',{d:'M968 304 L1000 226 L1032 304',fill:'none',stroke:'#7a5a44',"stroke-width":7,"stroke-linecap":'round'},fw);
+  const wh=g({class:'ferris'},fw);el('circle',{cx:1000,cy:226,r:60,fill:'none',stroke:'#800020',"stroke-width":5},wh);
+  for(let k=0;k<8;k++){const a=k*Math.PI/4,x=1000+Math.cos(a)*60,y=226+Math.sin(a)*60;el('path',{d:`M1000 226 L${x} ${y}`,stroke:'#800020',"stroke-width":3},wh);el('circle',{cx:x,cy:y,r:10,fill:FUN[k],class:'ol',"stroke-width":2.5},wh)}
+  el('circle',{cx:1000,cy:226,r:8,fill:'#ffd34d',class:'ol',"stroke-width":2.5},fw)}
 /* ---------- the lawn, the river, the bridge, the path ---------- */
 el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312 L1600 1000 L0 1000Z',fill:'url(#lawn)'});
-el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312',fill:'none',stroke:'#4f8f3f',"stroke-width":10});
+el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312',fill:'none',stroke:WINTER?'#c3d2df':'#4f8f3f',"stroke-width":10});
 const riverD='M1250 310 C 1300 420, 1180 520, 1260 640 S 1420 820, 1380 1010';
-el('path',{d:riverD,fill:'none',stroke:'#4aa9cf',"stroke-width":140,"stroke-linecap":'round'});
-el('path',{d:riverD,fill:'none',stroke:'#7fd6f2',"stroke-width":118,"stroke-linecap":'round'});
+el('path',{d:riverD,fill:'none',stroke:WINTER?'#8cc0da':'#4aa9cf',"stroke-width":140,"stroke-linecap":'round'});
+el('path',{d:riverD,fill:'none',stroke:WINTER?'#cde9f5':'#7fd6f2',"stroke-width":118,"stroke-linecap":'round'});
 el('path',{d:riverD,class:'shimmer'});el('path',{d:'M1225 310 C 1275 420, 1155 520, 1235 640 S 1395 820, 1355 1010',class:'shimmer',style:'animation-delay:-1.4s'});
-[[1290,720],[1230,560],[1350,880]].forEach(([x,y])=>{el('ellipse',{cx:x,cy:y,rx:18,ry:9,fill:'#5fbf6a',class:'ol'});el('circle',{cx:x+6,cy:y-4,r:4,fill:'#ff7aa2'})});
+[[1290,720],[1230,560],[1350,880]].forEach(([x,y])=>{if(WINTER){el('path',{d:`M${x-30} ${y} l14 -12 h30 l12 10 l-16 10 h-28 z`,fill:'#fff',class:'ol',"stroke-width":3});return}el('ellipse',{cx:x,cy:y,rx:18,ry:9,fill:'#5fbf6a',class:'ol'});el('circle',{cx:x+6,cy:y-4,r:4,fill:'#ff7aa2'})});
 // the bridge, with rails
 const br=g({});el('rect',{x:1150,y:640,width:230,height:70,rx:10,fill:'url(#planks)',class:'ol'},br);
 [1160,1370].forEach(x=>{el('rect',{x:x-6,y:612,width:12,height:40,rx:4,fill:'#a86b43',class:'ol'},br);el('rect',{x:x-6,y:698,width:12,height:30,rx:4,fill:'#a86b43',class:'ol'},br)});
 el('path',{d:'M1154 618 Q1265 600 1376 618',fill:'none',stroke:'#a86b43',"stroke-width":8,"stroke-linecap":'round'},br);
 // the sandy path with stepping stones
 const pathD='M-40 800 C 200 770, 380 780, 560 770 S 900 770, 1050 700 S 1150 675, 1200 675 L1400 675 C 1460 675, 1520 650, 1650 640';
-el('path',{d:pathD,fill:'none',stroke:'#e9cf9b',"stroke-width":96,"stroke-linecap":'round'});
-el('path',{d:pathD,fill:'none',stroke:'#f6e2b6',"stroke-width":80,"stroke-linecap":'round'});
+el('path',{d:pathD,fill:'none',stroke:WINTER?'#d8dde5':'#e9cf9b',"stroke-width":96,"stroke-linecap":'round'});
+el('path',{d:pathD,fill:'none',stroke:WINTER?'#e8ecf1':'#f6e2b6',"stroke-width":80,"stroke-linecap":'round'});
 W.appendChild(br); // the bridge sits on top of the path
 for(let i=0;i<14;i++){const x=40+i*80,y=792-Math.sin(i/2)*8;if(x>1100)break;el('ellipse',{cx:x,cy:y,rx:20,ry:10,fill:'#fff3d4',stroke:'#e2c48f',"stroke-width":3})}
 
 /* ---------- trees, bushes, flowers ---------- */
 function tree(x,y,s,fruit){sh(x,y+4,62*s);const t=g({class:'sway',style:'animation-delay:'+(-(x%5))+'s'});
   el('path',{d:`M${x-12*s} ${y} q4 -60 2 -80 h20 q-2 20 2 80 z`,fill:'#a86b43',class:'ol'},t);
-  [[0,-120,62],[-48,-96,46],[48,-96,46],[0,-160,46]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:'#5fb85a',class:'ol'},t));
-  [[-20,-140,26],[22,-110,20]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:'#79cf6c'},t));
-  if(fruit)[[-30,-110],[30,-140],[10,-90],[-6,-170],[46,-104]].forEach(([dx,dy])=>{el('circle',{cx:x+dx*s,cy:y+dy*s,r:9*s,fill:fruit,class:'ol',"stroke-width":3},t)})}
-function rhodo(x,y,s){sh(x,y+6,46*s);const b=g({class:'sway',style:'animation-delay:-1s'});[[-26,-20,30],[22,-22,30],[0,-40,32]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:'#4fa850',class:'ol'},b));
+  [[0,-120,62],[-48,-96,46],[48,-96,46],[0,-160,46]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:WINTER?'#e3ebf2':'#5fb85a',class:'ol'},t));
+  [[-20,-140,26],[22,-110,20]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:WINTER?'#fff':'#79cf6c'},t));
+  if(fruit&&!WINTER)[[-30,-110],[30,-140],[10,-90],[-6,-170],[46,-104]].forEach(([dx,dy])=>{el('circle',{cx:x+dx*s,cy:y+dy*s,r:9*s,fill:fruit,class:'ol',"stroke-width":3},t)})}
+function rhodo(x,y,s){sh(x,y+6,46*s);if(WINTER){el('path',{d:`M${x-64*s} ${y+4} q10 -44 46 -40 q20 -26 50 -6 q30 -6 32 46 z`,fill:'#f8fafc',class:'ol'});return}const b=g({class:'sway',style:'animation-delay:-1s'});[[-26,-20,30],[22,-22,30],[0,-40,32]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:'#4fa850',class:'ol'},b));
   for(let k=0;k<7;k++){const a=k*0.9,fx=x+Math.cos(a)*30*s,fy=y-28*s+Math.sin(a)*18*s;el('circle',{cx:fx,cy:fy,r:9*s,fill:k%2?'#e8336d':'#ff6b8a',class:'ol',"stroke-width":2.5},b)}}
 function patch(x,y){const p=g({});for(let k=0;k<6;k++){const fx=x+(k%3)*22,fy=y+Math.floor(k/3)*18,c=FUN[(k+x)%FUN.length];for(let q=0;q<5;q++)el('circle',{cx:fx+Math.cos(q*1.256)*6,cy:fy+Math.sin(q*1.256)*6,r:5,fill:c},p);el('circle',{cx:fx,cy:fy,r:3.4,fill:'#fff3a0'},p)}}
 tree(130,560,1,'#e8336d');tree(330,470,.85,'#e8336d');tree(1500,520,1,'#ffb23f');tree(1050,430,.8);tree(560,420,.7);
 rhodo(470,610,1);rhodo(1520,860,1.1);rhodo(80,920,1);rhodo(980,560,.8);
-[[230,880],[620,900],[860,880],[1080,880],[300,650],[1500,700],[700,560]].forEach(a=>patch(...a));
+if(!WINTER)[[230,880],[620,900],[860,880],[1080,880],[300,650],[1500,700],[700,560]].filter(([x])=>!(FEST&&(x===860||x===1080))).forEach(a=>patch(...a));
+// winter: a snowman keeps watch
+if(WINTER){const x=250,y=900;sh(x,y+4,40);el('circle',{cx:x,cy:y-30,r:34,fill:'#fff',class:'ol'});el('circle',{cx:x,cy:y-84,r:24,fill:'#fff',class:'ol'});
+  el('path',{d:`M${x-22} ${y-66} q22 10 44 0`,stroke:'#d02b8f',"stroke-width":8,fill:'none',"stroke-linecap":'round'});el('path',{d:`M${x} ${y-84} l18 4 l-18 4 z`,fill:'#ff7a1a'});
+  [-8,8].forEach(d=>el('circle',{cx:x+d,cy:y-92,r:3,fill:'#2a1a1e'}));el('path',{d:`M${x-20} ${y-104} h40 v-6 h-8 v-20 h-24 v20 h-8 z`,fill:'#3a3a6e',class:'ol',"stroke-width":3});
+  [[-34,-40,-62,-62],[34,-40,62,-66]].forEach(([a,b,c,d])=>el('path',{d:`M${x+a} ${y+b} L${x+c} ${y+d}`,stroke:'#7a5a44',"stroke-width":4,"stroke-linecap":'round'}))}
 
 /* ---------- prayer flags strung across the market ---------- */
 const flagsD='M130 420 Q 520 520 900 400';const fp=el('path',{d:flagsD,fill:'none',stroke:'#7a5a44',"stroke-width":3});
 const fl=fp.getTotalLength();for(let i=1;i<18;i++){const p=fp.getPointAtLength(fl*i/18);el('path',{d:`M${p.x-13} ${p.y} h26 l-3 32 h-20 z`,fill:['#2f5bff','#fff8ea','#d02b8f','#00a36c','#e3bd00'][i%5],class:'flag ol',"stroke-width":2.5,style:'animation-delay:'+(-i*.17)+'s'})}
 
+if(FEST){
+  // bunting zig-zags across the market
+  [['M-20 362 Q 400 440 820 352',15],['M760 352 Q 1180 430 1620 342',15]].forEach(([d,n],j)=>{const bp=el('path',{d,fill:'none',stroke:'#7a5a44',"stroke-width":3}),L=bp.getTotalLength();
+    for(let i=1;i<n;i++){const p=bp.getPointAtLength(L*i/n);el('path',{d:`M${p.x-14} ${p.y} h28 l-14 30 z`,fill:FUN[(i+j*3)%FUN.length],class:'flag ol',"stroke-width":2.5,style:'animation-delay:'+(-i*.2)+'s'})}});
+  // a marigold arch over the path, with a banner
+  const ar=g({});[52,258].forEach(x=>el('rect',{x:x-10,y:588,width:20,height:236,rx:6,fill:'#a86b43',class:'ol'},ar));
+  const ap=el('path',{d:'M40 600 Q155 520 270 600',fill:'none',stroke:'#a86b43',"stroke-width":14,"stroke-linecap":'round'},ar),aL=ap.getTotalLength();
+  for(let i=0;i<=18;i++){const q=ap.getPointAtLength(aL*i/18);el('circle',{cx:q.x,cy:q.y+4,r:10,fill:i%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":2},ar)}
+  [70,110,200,240].forEach(x=>{for(let k=0;k<4;k++)el('circle',{cx:x,cy:600+(x<155?(155-x):(x-155))*-.35+38+k*17,r:7,fill:k%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":1.5},ar)});
+  el('rect',{x:80,y:510,width:150,height:40,rx:20,fill:'#800020',class:'ol'},ar);el('text',{x:155,y:537,"text-anchor":'middle',style:'font:700 21px Fredoka,sans-serif;fill:#fff8ea'},ar).textContent='Hill Festival';
+  // a rangoli on the grass
+  const rg=g({transform:'translate(985 885) scale(1 .42)'});
+  for(let k=0;k<12;k++){const a=k*Math.PI/6,x=Math.cos(a)*64,y=Math.sin(a)*64;el('ellipse',{cx:x,cy:y,rx:24,ry:12,transform:`rotate(${k*30} ${x} ${y})`,fill:k%2?'#d02b8f':'#ff7a1a',class:'ol',"stroke-width":3},rg)}
+  for(let k=0;k<8;k++){const a=k*Math.PI/4,x=Math.cos(a)*34,y=Math.sin(a)*34;el('ellipse',{cx:x,cy:y,rx:16,ry:9,transform:`rotate(${k*45} ${x} ${y})`,fill:k%2?'#00a9bd':'#ffd34d',class:'ol',"stroke-width":3},rg)}
+  el('circle',{cx:0,cy:0,r:16,fill:'#7a3cff',class:'ol',"stroke-width":3},rg);for(let k=0;k<24;k++){const a=k*Math.PI/12;el('circle',{cx:Math.cos(a)*96,cy:Math.sin(a)*96,r:4.5,fill:'#fff8ea'},rg)}}
 /* ---------- the stall ---------- */
 const S=g({id:'stall'});const sx=760,sy=640;
 sh(sx,sy+130,230,S);
@@ -241,19 +281,38 @@ function good(key,name,short,price,draw,tx){const it=g({class:'goods',tabindex:0
   // before the stall opens, tapping a good opens its price tag; after, it just tells you the price
   const say=()=>{sfx('tap');if(!started)showPrices(key);else toast(name+' · ₹'+cost(key))};it.addEventListener('click',say);it.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();say()}});
   ITEMS[key]={name,short,it,lbl};setPrice(key,price,true)}
-function setPrice(k,v,quiet){PRICE[k]=v;ITEMS[k].lbl.textContent='₹'+cost(k);ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+cost(k));
+function setPrice(k,v,quiet){PRICE[k]=v;if(ITEMS[k]){ITEMS[k].lbl.textContent='₹'+cost(k);ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+cost(k))}else if(k==='bundle')drawBundle();
   if(!quiet)try{localStorage.setItem(KP+'prices',JSON.stringify(PRICE))}catch(e){}}
 function jar(p,x,h,w){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
+if(!WINTER){
 good('small','Small jar of mountain honey','Small honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
 good('medium','Medium jar of mountain honey','Medium honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
 good('large','Large jar of mountain honey','Big honey',400,p=>jar(p,sx-65,72,52),sx-65,0);
 good('apples','Crate of Himachali apples','Apples',90,p=>{el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy])=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:dx%20?'#ff4d6d':'#e8336d',class:'ol',"stroke-width":3},p))},sx+27,0);
 good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130,0);
 good('shawl','Kullu shawl','Kullu shawl',900,p=>{el('path',{d:`M${sx+178} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:sx+184,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},sx+206,0);
+}else{
+good('chai','Cup of masala chai','Cup of chai',30,p=>{el('path',{d:`M${sx-212} ${sy-40} q-6 -44 26 -46 q32 2 26 46 z`,fill:'#c97a3a',class:'ol'},p);el('path',{d:`M${sx-160} ${sy-66} l18 -14`,stroke:'#c97a3a',"stroke-width":7,"stroke-linecap":'round'},p);
+  el('rect',{x:sx-198,y:sy-94,width:24,height:9,rx:4,fill:'#a86b43',class:'ol',"stroke-width":2.5},p);el('path',{d:`M${sx-150} ${sy-40} v-18 h18 v18 z`,fill:'#fff8ea',class:'ol',"stroke-width":2.5},p);
+  const st=g({class:'steam'},p);for(let k=0;k<3;k++)el('circle',{cx:sx-141,cy:sy-86,r:5},st)},sx-185);
+good('walnuts','Bag of walnuts','Walnuts',150,p=>{el('path',{d:`M${sx-150} ${sy-40} q-4 -40 8 -56 h44 q12 16 8 56 z`,fill:'#d9b77a',class:'ol'},p);el('path',{d:`M${sx-140} ${sy-92} q22 8 44 0`,stroke:'#a86b43',"stroke-width":3,fill:'none'},p);
+  [[-136,-96],[-122,-102],[-108,-96],[-128,-108]].forEach(([dx,dy])=>el('circle',{cx:sx+dx,cy:sy+dy,r:8,fill:'#a0703c',class:'ol',"stroke-width":2},p))},sx-125);
+good('honey','Jar of mountain honey','Honey',180,p=>jar(p,sx-62,58,44),sx-62);
+good('socks','Pair of woollen socks','Woollen socks',200,p=>{[[0,'#d02b8f'],[24,'#00a9bd']].forEach(([dx,c])=>{const x=sx-8+dx;el('path',{d:`M${x} ${sy-104} h18 v44 q0 10 10 10 h8 v16 h-24 q-12 0 -12 -12 z`,fill:c,class:'ol',"stroke-width":3},p);[0,1,2].forEach(k=>el('rect',{x:x+2,y:sy-98+k*12,width:14,height:4,fill:'#fff8ea'},p))})},sx+27);
+good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130);
+good('shawl','Thick wool shawl','Thick shawl',1500,p=>{[['#2f7a52',-100,48],['#800020',-80,54],['#5a3d32',-60,60]].forEach(([c,dy,w])=>{el('rect',{x:sx+206-w/2,y:sy+dy,width:w,height:22,rx:7,fill:c,class:'ol',"stroke-width":3},p);el('path',{d:`M${sx+206-w/2+6} ${sy+dy+11} h${w-12}`,stroke:'#ffd34d',"stroke-width":2.5,"stroke-dasharray":'5 4'},p)})},sx+206);
+}
 try{const sv=JSON.parse(localStorage.getItem(KP+'prices')||'null');if(sv)for(const k in sv)if(ITEMS[k]&&sv[k]>0)setPrice(k,+sv[k],true)}catch(e){}
 // the cloth over the goods until the stall opens
 const cloth=g({class:'cloth'},S);el('path',{d:`M${sx-225} ${sy-130} h450 v96 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -112 0 q-56 22 -114 0 z`,fill:'#800020',class:'ol'},cloth);
 el('text',{x:sx,y:sy-80,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#fff8ea'},cloth).textContent='Opening soon!';
+// festival day: balloons tied to the posts
+if(FEST)[[sx-215,-1],[sx+215,1]].forEach(([x,d])=>{const bl=g({class:'bob',style:'animation-duration:2.6s'},S);[[0,-300,'#d02b8f'],[d*28,-282,'#2f5bff'],[-d*24,-270,'#ffd34d']].forEach(([dx,dy,c])=>{
+  el('path',{d:`M${x} ${sy-212} Q${x+dx*.4} ${sy+dy+70} ${x+dx} ${sy+dy+25}`,stroke:'#7a5a44',"stroke-width":2,fill:'none'},bl);el('ellipse',{cx:x+dx,cy:sy+dy,rx:20,ry:25,fill:c,class:'ol',"stroke-width":3},bl);el('ellipse',{cx:x+dx-7,cy:sy+dy-9,rx:5,ry:7,fill:'#fff',opacity:.6},bl)})});
+// winter: snow on the awning and the counter, and icicles
+if(WINTER){let d=`M${sx-238} ${sy-216}`;for(let k=0;k<12;k++)d+=' q19.8 -18 39.6 0';el('path',{d:d+' v8 h-475 z',fill:'#fff',class:'ol',"stroke-width":3},S);
+  for(let k=0;k<10;k++)el('path',{d:`M${sx-198+k*43} ${sy-143} l4 16 l4 -16 z`,fill:'#e2f4ff',class:'ol',"stroke-width":1.5},S);
+  let c=`M${sx-232} ${sy-38}`;for(let k=0;k<8;k++)c+=' q29 -12 58 0';el('path',{d:c+' z',fill:'#fff',class:'ol',"stroke-width":2.5},S)}
 // festival day: a marigold garland along the awning
 if(DAY===2)for(let k=0;k<=22;k++){const x=sx-232+k*21.1,y=sy-212+Math.sin(k/22*Math.PI)*16;el('circle',{cx:x,cy:y,r:9,fill:k%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":2},S)}
 // coin jar
@@ -265,7 +324,8 @@ const SIGNS=[
  {t:['Only 3','left!'],p:'Scarcity'},
  {t:['Everyone’s','favourite'],p:'Social proof'},
  {t:['Made in','the hills'],p:'Where it comes from'}];
-if(DAY===2)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
+if(FEST)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
+if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Under ₹5','a day!'],p:'Framing'},{t:['₹10 goes to','the school'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
 let sign=0;
 const BD=g({class:'board',tabindex:0,role:'button','aria-label':'The chalkboard sign. Tap to change it.'});const bd=g({class:'bd'},BD);
 const bx=430,by=780;sh(bx,by+8,80);
@@ -282,7 +342,7 @@ BD.addEventListener('click',nextSign);BD.addEventListener('keydown',e=>{if(e.key
 /* ---------- festival day: the free-taste tray ---------- */
 let tray=false;const trx=585,trY=850;
 const TR=g({class:'trayb',tabindex:0,role:'button','aria-label':'The free-taste tray. Tap to put it out or cover it.'});
-if(DAY!==2)TR.style.display='none';
+if(DAY===1)TR.style.display='none';if(WINTER)TR.setAttribute('aria-label','The bundle basket. Tap to offer chai and walnuts together, or not.');
 sh(trx,trY+6,50,TR);el('path',{d:`M${trx-30} ${trY} L${trx-22} ${trY-60} M${trx+30} ${trY} L${trx+22} ${trY-60}`,stroke:'#a86b43',"stroke-width":9,"stroke-linecap":'round'},TR);
 el('ellipse',{cx:trx,cy:trY-62,rx:46,ry:12,fill:'#d39561',class:'ol'},TR);
 const trOn=g({},TR),trOff=g({},TR);
@@ -291,10 +351,21 @@ el('ellipse',{cx:trx,cy:trY-72,rx:40,ry:10,fill:'#fff8ea',class:'ol',"stroke-wid
 el('rect',{x:trx-48,y:trY-132,width:96,height:28,rx:14,fill:'#ffd34d',class:'ol',"stroke-width":3},trOn);el('text',{x:trx,y:trY-112,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},trOn).textContent='Free taste!';
 el('path',{d:`M${trx-40} ${trY-68} q40 -52 80 0 z`,fill:'#800020',class:'ol',"stroke-width":3},trOff);el('circle',{cx:trx,cy:trY-96,r:6,fill:'#ffd34d',class:'ol',"stroke-width":2.5},trOff);
 const trTap=g({class:'bob'},trOff);el('rect',{x:trx-50,y:trY-148,width:100,height:28,rx:14,fill:'#fff8ea',class:'ol',"stroke-width":3},trTap);el('text',{x:trx,y:trY-128,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},trTap).textContent='Free taste?';
-function drawTray(){trOn.style.display=tray?'':'none';trOff.style.display=tray?'none':''}
+function drawTray(){trOn.style.display=FEST&&tray?'':'none';trOff.style.display=FEST&&!tray?'':'none'}
+// winter: a basket that offers chai and walnuts together, at a bundle price you set
+let bundle=false;const bkOn=g({},TR),bkOff=g({},TR);
+[bkOn,bkOff].forEach(p=>{el('path',{d:`M${trx-30} ${trY-74} q30 -44 60 0`,fill:'none',stroke:'#a86b43',"stroke-width":5},p);el('path',{d:`M${trx-40} ${trY-76} h80 l-9 32 h-62 z`,fill:'#c98a5a',class:'ol',"stroke-width":3},p)});
+el('rect',{x:trx-26,y:trY-100,width:20,height:24,rx:4,fill:'#fff8ea',class:'ol',"stroke-width":2.5},bkOn);[[8,-84],[22,-88],[15,-96]].forEach(([dx,dy])=>el('circle',{cx:trx+dx,cy:trY+dy,r:7,fill:'#a0703c',class:'ol',"stroke-width":2},bkOn));
+el('rect',{x:trx-62,y:trY-140,width:124,height:28,rx:14,fill:'#ffd34d',class:'ol',"stroke-width":3},bkOn);const bkL=el('text',{x:trx,y:trY-120,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},bkOn);
+const bkTap=g({class:'bob'},bkOff);el('rect',{x:trx-42,y:trY-142,width:84,height:28,rx:14,fill:'#fff8ea',class:'ol',"stroke-width":3},bkTap);el('text',{x:trx,y:trY-122,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},bkTap).textContent='Bundle?';
+function drawBundle(){bkOn.style.display=WINTER&&bundle?'':'none';bkOff.style.display=WINTER&&!bundle?'':'none';if(WINTER)bkL.textContent='Chai + nuts ₹'+cost('bundle')}
+if(WINTER){PRICE.bundle=160;try{const sv=JSON.parse(localStorage.getItem(KP+'prices')||'null');if(sv&&sv.bundle>0)PRICE.bundle=+sv.bundle}catch(e){}}
+drawBundle();
+const toggleBundle=()=>{if(open||!WINTER)return;bundle=!bundle;drawBundle();sfx('clink');toast(bundle?'Bundle on: chai + walnuts for ₹'+cost('bundle'):'No bundle today')};
 drawTray();
 const toggleTray=()=>{if(open||DAY!==2)return;tray=!tray;drawTray();sfx('clink');toast(tray?'Free tastes are out (₹40 of honey each half-day)':'The tray is covered')};
-TR.addEventListener('click',toggleTray);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleTray()}});
+const useStool=()=>WINTER?toggleBundle():toggleTray();
+TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();useStool()}});
 
 /* ---------- Riya, the stall keeper's friend ---------- */
 function riya(x,y){const r=g({transform:`translate(${x} ${y})`});sh(0,4,34,r);const i=g({class:'bob'},r);
@@ -313,6 +384,7 @@ function riya(x,y){const r=g({transform:`translate(${x} ${y})`});sh(0,4,34,r);co
   el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   // a rhododendron clip
   for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i);
+  if(WINTER){el('path',{d:'M-36 -132 Q -36 -178 0 -178 Q 36 -178 36 -132 Z',fill:'#d02b8f',class:'ol',"stroke-width":3},i);el('rect',{x:-38,y:-142,width:76,height:15,rx:7,fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('circle',{cx:0,cy:-182,r:11,fill:'#fff8ea',class:'ol',"stroke-width":3},i)}
   el('ellipse',{cx:-11,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);el('ellipse',{cx:12,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);
   el('circle',{cx:-9,cy:-126,r:1.6,fill:'#fff'},i);el('circle',{cx:14,cy:-126,r:1.6,fill:'#fff'},i);
   el('circle',{cx:-19,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);el('circle',{cx:20,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);
@@ -372,18 +444,42 @@ const CAST={
    el('circle',{cx:0,cy:-116,r:40,fill:'#2a2422',class:'ol'},p);
    el('ellipse',{cx:-11,cy:-122,rx:8,ry:10,fill:'#fff8ea'},p);el('ellipse',{cx:11,cy:-122,rx:8,ry:10,fill:'#fff8ea'},p);eyes(p,0,-121,.8);
    el('ellipse',{cx:0,cy:-100,rx:20,ry:14,fill:'#c9a27a',class:'ol',"stroke-width":3},p);el('ellipse',{cx:0,cy:-106,rx:7,ry:5,fill:'#1a1414'},p);
-   el('path',{d:'M-8 -94 q8 6 16 0',stroke:'#1a1414',"stroke-width":2.5,fill:'none',"stroke-linecap":'round'},p)}}};
+   el('path',{d:'M-8 -94 q8 6 16 0',stroke:'#1a1414',"stroke-width":2.5,fill:'none',"stroke-linecap":'round'},p)}},
+ // winter market
+ ibex:{name:'Milo',kind:'a Himalayan ibex',c:'#b08a63',fg:'#fff8ea',draw(p){legs(p,'#8a6a4c');el('ellipse',{cx:0,cy:-50,rx:44,ry:34,fill:'#b08a63',class:'ol'},p);
+   el('path',{d:'M-14 -134 q-40 -10 -44 -60 q24 10 30 40 M14 -134 q40 -10 44 -60 q-24 10 -30 40',fill:'#e6d3b3',stroke:'#5b3a2e',"stroke-width":4,"stroke-linejoin":'round'},p);
+   [0,1,2].forEach(k=>{el('path',{d:`M${-34-k*4} ${-150-k*12} l8 3 M${34+k*4} ${-150-k*12} l-8 3`,stroke:'#5b3a2e',"stroke-width":2.5},p)});
+   el('circle',{cx:0,cy:-104,r:33,fill:'#c9a47c',class:'ol'},p);el('ellipse',{cx:-36,cy:-104,rx:13,ry:7,fill:'#b08a63',class:'ol',"stroke-width":3,transform:'rotate(25 -36 -104)'},p);el('ellipse',{cx:36,cy:-104,rx:13,ry:7,fill:'#b08a63',class:'ol',"stroke-width":3,transform:'rotate(-25 36 -104)'},p);
+   eyes(p,0,-106,.9);el('path',{d:'M-8 -80 q8 22 16 0 z',fill:'#7a5a44',class:'ol',"stroke-width":2.5},p);el('path',{d:'M-28 -70 q28 14 56 0',stroke:'#e3bd00',"stroke-width":8,fill:'none',"stroke-linecap":'round'},p)}},
+ partridge:{name:'Dot',kind:'a snow partridge',c:'#8a96a3',fg:'#fff8ea',draw(p){el('rect',{x:-14,y:-22,width:6,height:24,fill:'#e8336d'},p);el('rect',{x:8,y:-22,width:6,height:24,fill:'#e8336d'},p);
+   el('ellipse',{cx:0,cy:-62,rx:46,ry:44,fill:'#eef1f4',class:'ol'},p);for(let k=0;k<4;k++)el('path',{d:`M${-40+k*6} ${-70+k*14} q16 -6 30 0`,stroke:'#8a5a3c',"stroke-width":5,fill:'none',"stroke-linecap":'round'},p);
+   el('circle',{cx:0,cy:-112,r:28,fill:'#6f7b88',class:'ol'},p);el('path',{d:'M-22 -100 q22 12 44 0',stroke:'#fff8ea',"stroke-width":6,fill:'none'},p);
+   eyes(p,0,-116,.8);el('path',{d:'M-6 -104 l6 10 l6 -10 z',fill:'#e8336d',class:'ol',"stroke-width":2.5},p);el('path',{d:'M36 -60 q24 -4 20 -30',stroke:'#6f7b88',"stroke-width":8,fill:'none',"stroke-linecap":'round'},p)}},
+ fox:{name:'Tess',kind:'a Tibetan fox',c:'#d9904a',fg:'#fff8ea',draw(p){legs(p,'#8a4a1c');
+   const tail=g({class:'sway'},p);el('path',{d:'M32 -40 q66 -4 60 -64 q-10 -10 -24 0 q8 40 -36 50 z',fill:'#d9904a',class:'ol',"stroke-width":3},tail);el('path',{d:'M84 -96 q-10 -10 -16 -4 l6 10 z',fill:'#fff8ea'},tail);
+   el('ellipse',{cx:0,cy:-50,rx:40,ry:34,fill:'#d9904a',class:'ol'},p);
+   el('path',{d:'M-30 -126 l-4 -34 l24 20 z M30 -126 l4 -34 l-24 20 z',fill:'#d9904a',class:'ol',"stroke-width":3},p);
+   el('rect',{x:-40,y:-138,width:80,height:66,rx:22,fill:'#d9904a',class:'ol'},p);el('path',{d:'M-40 -104 q0 30 22 32 h36 q22 -2 22 -32 q-20 12 -40 12 q-20 0 -40 -12 z',fill:'#b9b4ad'},p);
+   el('ellipse',{cx:0,cy:-92,rx:14,ry:10,fill:'#fff8ea'},p);eyes(p,0,-112,.8);el('circle',{cx:0,cy:-96,r:4.5,fill:'#2a1a1e'},p);
+   el('path',{d:'M-26 -66 q26 12 52 0',stroke:'#800020',"stroke-width":8,fill:'none',"stroke-linecap":'round'},p)}}};
 function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);
   const em=g({class:'emote'},o);el('path',{d:'M-28 -230 h56 a14 14 0 0 1 14 14 v20 a14 14 0 0 1 -14 14 h-20 l-8 12 l-8 -12 h-20 a14 14 0 0 1 -14 -14 v-20 a14 14 0 0 1 14 -14z',fill:'#fffdf6',class:'ol',"stroke-width":3.5},em);
   const et=el('text',{x:0,y:-196,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},em);return {key,v,o,em,et}}
 // butterflies and petals for life
-for(let i=0;i<4;i++){const b=g({class:'bfly',style:'animation-delay:'+(-i*3.5)+'s'});const x=200+i*350,y=520+(i%2)*160;const c=FUN[i*2%FUN.length];
+if(!WINTER)for(let i=0;i<4;i++){const b=g({class:'bfly',style:'animation-delay:'+(-i*3.5)+'s'});const x=200+i*350,y=520+(i%2)*160;const c=FUN[i*2%FUN.length];
   el('ellipse',{cx:x-8,cy:y,rx:9,ry:12,fill:c,class:'w ol',"stroke-width":2},b);el('ellipse',{cx:x+8,cy:y,rx:9,ry:12,fill:c,class:'w r ol',"stroke-width":2},b);el('rect',{x:x-2,y:y-8,width:4,height:16,rx:2,fill:'#5b3a2e'},b)}
-for(let i=0;i<12;i++)el('ellipse',{cx:Math.random()*1700,cy:Math.random()*200,rx:6,ry:4,class:'petal',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(8+Math.random()*5)+'s'});
+if(WINTER)for(let i=0;i<46;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2.5+Math.random()*4,class:'snow',style:'animation-delay:'+(-Math.random()*12)+'s;animation-duration:'+(9+Math.random()*7)+'s'});
+else if(FEST)for(let i=0;i<30;i++)el('rect',{x:Math.random()*1700,y:Math.random()*200,width:9,height:5,fill:FUN[i%FUN.length],class:'conf',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(7+Math.random()*5)+'s'});
+else for(let i=0;i<12;i++)el('ellipse',{cx:Math.random()*1700,cy:Math.random()*200,rx:6,ry:4,class:'petal',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(8+Math.random()*5)+'s'});
 // a little house on the hill with smoke
 const hs=g({});el('rect',{x:1420,y:300,width:80,height:60,rx:6,fill:'#fff8ea',class:'ol'},hs);el('path',{d:'M1408 304 L1460 262 L1512 304 Z',fill:'#2f5bff',class:'ol'},hs);el('rect',{x:1450,y:326,width:20,height:34,rx:4,fill:'#800020',class:'ol',"stroke-width":3},hs);
 const sm=g({class:'smoke'});for(let k=0;k<3;k++)el('circle',{cx:1490,cy:262,r:10},sm);
 const duskL=el('rect',{x:0,y:0,width:1600,height:1000,class:'dusk'});
+if(FEST){const lp=el('path',{d:'M380 262 Q 760 322 1140 262',fill:'none',stroke:'#5b3a2e',"stroke-width":2.5}),L=lp.getTotalLength();
+  for(let i=1;i<12;i++){const p=lp.getPointAtLength(L*i/12),c=['#ff4d6d','#ffb300','#ff7a1a'][i%3],lg=g({class:'tag',style:'animation-delay:'+(-i*.3)+'s'});
+    el('circle',{cx:p.x,cy:p.y+22,r:28,fill:c,class:'glowl',style:'filter:blur(7px)'},lg);el('path',{d:`M${p.x} ${p.y} v8`,stroke:'#5b3a2e',"stroke-width":2},lg);
+    el('ellipse',{cx:p.x,cy:p.y+22,rx:13,ry:15,fill:c,class:'ol',"stroke-width":2.5},lg);el('path',{d:`M${p.x-12} ${p.y+22} h24`,stroke:'#fff3a0',"stroke-width":2},lg)}}
+if(WINTER){el('circle',{cx:1440,cy:332,r:26,fill:'#ffcf5a',class:'glowl',style:'filter:blur(8px)'});el('rect',{x:1428,y:320,width:22,height:22,rx:4,fill:'#ffcf5a',class:'ol',"stroke-width":3})}
 
 /* ---------- sound: every effect is made live in the browser, no audio files ---------- */
 let AC=null,master=null,muted=false,armed=false;
@@ -416,6 +512,7 @@ const SFX={
     const mouth=a.createBiquadFilter();mouth.type='bandpass';mouth.Q.value=2.2;mouth.frequency.value=(VOW[ch]||1200)*v.fm;   // vowels open the 'mouth' differently
     const gn=a.createGain();gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(v.vol||.2,t+.008);gn.gain.exponentialRampToValueAtTime(.0001,t+d);
     const body=a.createGain();body.gain.value=.25;osc.connect(mouth).connect(gn);osc.connect(body).connect(gn);gn.connect(master);osc.start(t);osc.stop(t+d+.02)},
+  drum(){[0,.18,.3,.48,.6].forEach((t,i)=>{tone(i%2?140:95,t,.22,{vol:.22,to:55});hiss(t,.08,{vol:.12,freq:900,q:.8})})},           // a little festival drum
   perfect(){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.7,{type:'triangle',vol:.12}));SFX.coin()}
 };
 function sfx(k,arg){if(muted||!armed||!SFX[k])return;try{SFX[k](arg)}catch(e){}}
@@ -430,7 +527,10 @@ const VOX={
   Wren:{f:780,w:'triangle',fm:1.2,glide:1.12,dur:.06},                 // soft and twittery
   Bo:{f:690,w:'triangle',fm:1.1,vib:[16,.05],dur:.07},                 // a small purr in it
   Lumi:{f:980,w:'square',fm:1.3,dur:.05,vol:.1,every:4},               // fast and chirpy
-  Gus:{f:110,w:'sawtooth',fm:.5,vib:[6,.05],dur:.15,every:8,vol:.24}}; // a deep, sleepy rumble
+  Gus:{f:110,w:'sawtooth',fm:.5,vib:[6,.05],dur:.15,every:8,vol:.24}, // a deep, sleepy rumble
+  Milo:{f:360,w:'sawtooth',fm:.8,vib:[20,.07],dur:.1,vol:.14},        // a gruff little bleat
+  Dot:{f:1250,w:'sine',fm:1.5,glide:.78,dur:.05,every:4},              // soft falling chirps
+  Tess:{f:820,w:'square',fm:1.2,dur:.055,vol:.1}};                     // quick, yappy
 const VOW={a:800,e:1700,i:2300,o:560,u:420,y:2000};
 const sndBtn=$('#snd');
 function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
@@ -447,19 +547,41 @@ const hush=()=>talkEl.classList.add('hide');
 const toastEl=$('#toast');let tt;function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),1800)}
 let money=0;function earn(n,x,y){money+=n;sfx('coin');$('#money').textContent=money;const pu=$('#purse');pu.classList.remove('bump');void pu.offsetWidth;pu.classList.add('bump');
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin'});c.textContent='+₹'+n;setTimeout(()=>c.remove(),1500)}
-let trayCost=0;function spend(n,x,y){money-=n;trayCost+=n;sfx('spend');$('#money').textContent=money;
+const costs={tastes:0,school:0};function spend(n,x,y,kind){money-=n;costs[kind||'tastes']+=n;sfx('spend');$('#money').textContent=money;
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin',style:'fill:#ff8a8a'});c.textContent='−₹'+n;setTimeout(()=>c.remove(),1500)}
 function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');sun.style.transform='translate('+(-(h-9)*80)+'px,'+(Math.max(0,h-13)*26)+'px)'}
 
 /* ---------- the day: each villager has a reason to buy, or not ---------- */
 let open=false,log=[];
-const order=DAY===2?['goat','marmot','cub','bear','panda']:['goat','monal','pika','yak','panda'];
+const order=WINTER?['ibex','partridge','yak','fox','cub']:FEST?['goat','marmot','cub','bear','panda']:['goat','monal','pika','yak','panda'];
 // each villager has a price limit; the right sign, the right price beside it, a free taste or a happy yesterday stretches it
-const BEST_DAY=DAY===2?2355:1240;
-let D1={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{}}catch(e){}
+let D1={},D2={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{};D2=JSON.parse(localStorage.getItem('md-d2')||'{}')||{}}catch(e){}
+const BEST_DAY=WINTER?3000+(D2.cub?120:0):FEST?2355:1240;
 function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k],C=cost;
   const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:C(k),think,why,note}),no=(think,why,note)=>({think,why,note});
   const back=DAY===2?' Win him on Day 1 and he comes back loyal.':'';
+  if(WINTER){
+    if(key==='ibex'){const b=C('bundle'),sep=C('chai')+C('walnuts'),why='Bundling';
+      if(bundle&&b<=250&&b<sep)return {buy:'Chai and walnuts bundle',n:b,think:`Chai and walnuts together for ₹${b}? That’s a deal!`,why,note:`Together they cost less than ₹${sep} apart, so the bundle felt like a saving. Milo pays up to ₹250 for it.`};
+      const hint=!bundle?'Offer the chai and walnuts bundle and he’d pay up to ₹250 for both.':b>=sep?`The bundle cost no less than buying both apart (₹${sep}), so it didn’t feel like a deal.`:`₹${b} was past his ₹250 limit for the bundle.`;
+      if(C('chai')<=40)return yes('chai','Just a cup of chai for me, thanks.',why,'He only bought the chai. '+hint);
+      return no('Too dear for a cold morning.',why,hint)}
+    if(key==='partridge'){const so=C('socks'),why='A good cause';
+      if(s===2&&so<=300)return yes('socks','Some of it goes to the school? Then I’m in!',why,'Knowing ₹10 went to the village school made Dot happy to pay more: up to ₹300 for the socks.');
+      if(s===2)return no(`A kind idea… but ₹${so} for socks?`,why,'The good cause moved her, but not past ₹300.');
+      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “₹10 goes to the school” would have let you charge up to ₹300.');
+      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “₹10 goes to the school” would have won her, at up to ₹300.')}
+    if(key==='yak'){const c=C('cap'),sw=C('shawl'),anchor=sw>=1000?Math.min(Math.floor(sw*.03)*10,500):250,lim=D1.yak?Math.max(anchor,450):anchor,why=D1.yak&&anchor<450?'Loyalty':'Anchoring';
+      if(c<=lim)return yes('cap',D1.yak?'Back again! A warm cap for winter, please.':`The shawl’s ₹${sw}… so ₹${c} for a cap is fair.`,why,(D1.yak?'Kiko bought from you on the first day, so he’d pay up to ₹450 on trust alone. ':'')+(sw>=1000?`Next to the ₹${sw} shawl, he’d pay up to ₹${anchor}.`:'With no pricey shawl beside it, his anchor was low.'));
+      return no(`₹${c} for a cap? Too much.`,why,`His limit today was ₹${lim}. `+(sw>=1000?'':'A shawl at ₹1,000 or more would have raised it. ')+(D1.yak?'':'Win him on Day 1 and he comes back trusting you.'))}
+    if(key==='fox'){const sw=C('shawl'),why='Framing';
+      if(s===1&&sw<=1800)return yes('shawl','Under ₹5 a day? For a shawl this warm, that’s nothing!',why,`₹${sw} sounds like a lot. “Under ₹5 a day” made it feel small. With it, Tess pays up to ₹1,800.`);
+      if(s===1)return no(`Even at ₹5 a day, ₹${sw} is too much.`,why,'Framing worked on her, but not past ₹1,800.');
+      if(sw<=900)return yes('shawl',`A thick shawl for ₹${sw}? Yes please.`,why,'She bought because it was cheap. “Under ₹5 a day” would have let you charge up to ₹1,800.');
+      return no(`₹${sw}? That’s a lot of money.`,why,'One big number scared her off. “Under ₹5 a day” makes the same price feel small, and she’d pay up to ₹1,800.')}
+    if(key==='cub'){const h=C('honey'),lim=D2.cub?300:180,why='Loyalty';
+      if(h<=lim)return yes('honey',D2.cub?'Remember me from the festival? Honey for the cold, please!':`Honey for ₹${h}. Good for a cold day.`,why,D2.cub?'Bo bought from you on Festival day, so he trusts you: up to ₹300 for honey.':'He paid what he’d pay any stall: up to ₹180. Win him on Festival day and he’d trust you with ₹300.');
+      return no(`₹${h} for honey? Not from a stall I don’t know.`,why,`His limit was ₹${lim}. `+(D2.cub?'':'Win him on Festival day and he’d trust you with up to ₹300.'))}}
   if(key==='goat'){const m=C('medium'),L=P('large'),why='The decoy effect';
     if(DAY===2&&D1.goat){if(m<=250)return yes('medium','Back for more of that honey!','Loyalty','Pip bought from you yesterday, so he trusted you today. No decoy needed, up to ₹250.');
       return no(`₹${m}? Yesterday was better value.`,'Loyalty',`He came back because he trusted you, but ₹${m} was past his ₹250 limit.`)}
@@ -508,23 +630,23 @@ const step=v=>v<200?10:50;
 function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.innerHTML='';
   if(DAY===2){const r=document.createElement('div');r.className='prow tg';r.innerHTML='<b>End prices in 9<small>₹199, not ₹200</small></b><button class="ptog" type="button" aria-pressed="'+charm+'">'+(charm?'On':'Off')+'</button>';
     r.querySelector('.ptog').onclick=()=>{charm=!charm;try{localStorage.setItem(KP+'charm',charm?'1':'0')}catch(e){}for(const q in ITEMS)setPrice(q,PRICE[q],true);sfx('tap');showPrices(k)};pl.appendChild(r)}
-  ['small','medium','large','apples','cap','shawl'].forEach(key=>{const r=document.createElement('div');r.className='prow'+(key===k?' hi':'');
-    r.innerHTML='<b>'+ITEMS[key].short+'</b><button class="step" type="button" aria-label="Lower the '+ITEMS[key].short+' price">−</button><output>₹'+cost(key)+'</output><button class="step" type="button" aria-label="Raise the '+ITEMS[key].short+' price">+</button>';
+  Object.keys(ITEMS).concat(WINTER?['bundle']:[]).forEach(key=>{const r=document.createElement('div'),nm=ITEMS[key]?ITEMS[key].short:'Chai + nuts bundle';r.className='prow'+(key===k?' hi':'');
+    r.innerHTML='<b>'+nm+'</b><button class="step" type="button" aria-label="Lower the '+nm+' price">−</button><output>₹'+cost(key)+'</output><button class="step" type="button" aria-label="Raise the '+nm+' price">+</button>';
     const [dn,up]=r.querySelectorAll('.step'),out=r.querySelector('output');
     const go=d=>{const v=PRICE[key],nv=Math.max(10,Math.min(2000,d>0?v+step(v):v-step(v-1)));setPrice(key,nv);out.textContent='₹'+cost(key);sfx('tap')};
     dn.onclick=()=>go(-1);up.onclick=()=>go(1);pl.appendChild(r);if(key===k)setTimeout(()=>up.focus(),50)});
   $('#prices').classList.add('on')}
 $('#pdone').onclick=()=>{sfx('tap');$('#prices').classList.remove('on');scrollTo(focus());morning()};
-let morningSign=0,morningTray=false,lunched=false,paused=false;
-function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;morningTray=tray;$('#stall').classList.add('opened');sfx('open');hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+let morningSign=0,morningTray=false,morningBundle=false,lunched=false,paused=false;
+function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;morningTray=tray;morningBundle=bundle;$('#stall').classList.add('opened');sfx('open');if(FEST)setTimeout(()=>sfx('drum'),350);hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
   if(tray)setTimeout(()=>spend(40,trx,trY-150),700);
   let h=9,m=0;clock(h,m);const tick=setInterval(()=>{if(paused)return;m+=30;if(m>=60){m=0;h++}clock(h,m);document.documentElement.style.setProperty('--dusk',Math.max(0,(h-14)/5*.45))},3000);
   const cast=order.map(villager);let i=0;
   // lunchtime: one chance to change things for the afternoon shoppers
   function lunch(){lunched=true;paused=true;sfx('bell');h=13;m=0;clock(h,m);open=false;
     const sold=log.filter(l=>l.buy).length,aft=order.slice(3).map(k=>CAST[k].name).join(' and ');
-    talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. '+aft+' come by this afternoon. '+(DAY===2?'Want to change the sign or the tasting tray?':'Want to change the sign for them?'),[
-      {t:DAY===2?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',DAY===2?'Tap the chalkboard or the tasting tray to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
+    talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. '+aft+' come by this afternoon. '+(FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
+      {t:DAY>1?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',FEST?'Tap the chalkboard or the tasting tray to change them, then head back.':WINTER?'Tap the chalkboard or the bundle basket to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
       {t:'Keep it',soft:true,fn:resume}])}
   function resume(){open=true;paused=false;tapme.style.display='none';hush();scrollTo(sx);if(sign!==morningSign)toast('Afternoon sign: “'+SIGNS[sign].t.join(' ')+'”');
     if(tray)setTimeout(()=>spend(40,trx,trY-150),300);setTimeout(nextOne,600)}
@@ -535,31 +657,35 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');mornin
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
     setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);}else sfx('meh');log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
 const narrow=()=>$('#stage').clientWidth<W.getBoundingClientRect().width*.45;
 const focus=()=>!open&&narrow()?bx+60:sx;
 function scrollTo(x,now){const stg=$('#stage'),sc=W.getBoundingClientRect().width/1600;stg.scrollTo({left:x*sc-stg.clientWidth/2,behavior:reduce||now?'auto':'smooth'})}
-const toDay=d=>{if(d===2)location.hash='day2';else history.replaceState(null,'',location.pathname+location.search);location.reload()};
+const toDay=d=>{if(d>1)location.hash='day'+d;else history.replaceState(null,'',location.pathname+location.search);location.reload()};
+const unlocked=d=>d===1||(d===2&&Object.keys(D1).length>0)||(d===3&&Object.keys(D2).length>0);
 
 /* ---------- dusk: the ledger ---------- */
 function endDay(){const sold=log.filter(l=>l.buy);
   // Day 1 is remembered: whoever bought comes back loyal on Festival day
-  if(DAY===1)try{localStorage.setItem('md-d1',JSON.stringify({goat:log.some(l=>l.key==='goat'&&l.buy),panda:log.some(l=>l.key==='panda'&&l.buy)}))}catch(e){}
-  $('#lp').innerHTML='<small>'+(DAY===2?'Festival day':'Market Day')+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
-    (trayCost?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+trayCost+'</span></div>':'')+
+  const won=k=>log.some(l=>l.key===k&&l.buy);
+  try{if(DAY===1)localStorage.setItem('md-d1',JSON.stringify({goat:won('goat'),panda:won('panda'),yak:won('yak')}));if(FEST)localStorage.setItem('md-d2',JSON.stringify({cub:won('cub')}))}catch(e){}
+  $('#lp').innerHTML='<small>'+DAYNAME[DAY]+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
+    (costs.tastes?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+costs.tastes+'</span></div>':'')+
+    (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>To the village school</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
-  const trayNote=DAY!==2?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
+  const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';(DAY===2?[['Play Festival day again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
+  $('#la').innerHTML='';(WINTER?[['Play winter again',()=>location.reload()],['Back to Day 1',()=>toDay(1)]]:FEST?[['Play Festival day again',()=>location.reload()],['On to Winter market →',()=>toDay(3)]]:[['Play another day',()=>location.reload()],['On to Festival day →',()=>toDay(2)]])
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
   $('#sum').textContent=(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
     :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
+    :WINTER?n+' of 5 villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
     :DAY===2?n+' of 5 villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
     :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
     (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
@@ -568,9 +694,12 @@ function endDay(){const sold=log.filter(l=>l.buy);
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
 function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()};
-  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}]);
+  const other=[1,2,3].filter(d=>d!==DAY&&unlocked(d));
+  const days=other.length?{t:'Other days',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Which market day?',other.map(d=>({t:DAYNAME[d]+' →',fn:()=>toDay(d)})).concat([{t:'Stay here',soft:true,fn:morning}]))}:null;
+  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle chai with walnuts.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
+  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
   const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
-  if(Object.keys(D1).length)b.push({t:'Festival day →',soft:true,fn:()=>toDay(2)});
+  if(days)b.push(days);
   talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
 setTimeout(()=>{scrollTo(focus());morning()},500);
 addEventListener('resize',()=>scrollTo(focus(),true));
