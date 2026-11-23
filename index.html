@@ -107,6 +107,22 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .why .principle{margin:0 0 4px}
 .total{display:flex;justify-content:space-between;margin-top:12px;font:700 22px var(--font);color:var(--b)}
 .sum{flex:none;margin:12px 6px 0;color:#fff8ea;font:600 18px/1.4 var(--font);text-align:center}
+.stk{position:fixed;inset:0;z-index:75;background:#2a1a1ef2;display:none;align-items:center;justify-content:center;padding:16px}
+.stk.on{display:flex}
+.album{width:min(880px,100%);max-height:calc(100dvh - 32px);overflow:hidden;display:flex;flex-direction:column;background:#fff6e0;border-radius:26px;padding:20px 22px 18px;box-shadow:0 0 0 5px var(--ink),0 14px 0 5px #0000002a;animation:open .5s var(--spring)}
+.album>small{font:600 14px var(--font);color:#9a7b62;letter-spacing:.5px}
+.album h2{font:700 28px var(--font);color:var(--b);margin-top:2px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0 16px;padding:4px;flex:1 1 auto;min-height:0;overflow:auto}
+.stc{background:#fffdf6;border-radius:18px;padding:12px 10px;text-align:center;box-shadow:0 0 0 3px #e0c89e}
+.stc svg{width:88px;height:88px;display:block;margin:0 auto 6px}
+.stc b{display:block;font:700 16px var(--font);color:var(--b)}
+.stc span{display:block;font:500 13px/1.35 var(--font);color:var(--ink);margin-top:2px}
+.stc.locked{background:#fbf3e3;box-shadow:0 0 0 3px #eadcc4}
+.stc.locked b{color:#b8a48f}.stc.locked span{color:#9a7b62}
+.stc.new{animation:stpop .7s var(--spring)}
+@keyframes stpop{0%{transform:scale(.5) rotate(-8deg)}100%{transform:none}}
+.album .acts{flex:none;display:flex;justify-content:center}
+@media (max-width:700px){.sgrid{grid-template-columns:repeat(2,1fr);gap:10px}.album{padding:16px 14px}.album h2{font-size:23px}}
 .post{position:fixed;inset:0;z-index:70;background:#2a1a1ef2;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px;perspective:1600px}
 .post.on{display:flex}
 .card3d{width:min(760px,100%,calc((100vh - 170px) * 1.5));aspect-ratio:3/2;position:relative;transform-style:preserve-3d;transition:transform .8s var(--spring);cursor:pointer;animation:open .6s var(--spring)}
@@ -157,11 +173,12 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 <body>
 <div class="stage" id="stage"><svg class="scene" id="w" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A hill market on a sunny morning"></svg></div>
 
-<div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span></div>
+<div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span><button class="pill" id="stkp" type="button" aria-label="Sticker book"><span class="ic">★</span><span id="stkn">0/12</span></button></div>
 <div class="hud r"><button class="pill snd" id="snd" type="button" aria-pressed="true" aria-label="Sound"><span class="ic">♪</span><span id="sndtx">On</span></button><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
 <div class="prices" id="prices" role="dialog" aria-label="Price tags"><h3>Price tags</h3><small>Every villager has a limit. The right sign, or the right price beside it, can stretch it.</small><div id="plist"></div><button class="btn" id="pdone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
+<div class="stk" id="stk" role="dialog" aria-modal="true" aria-label="Sticker book"><div class="album"><small>STICKER BOOK</small><h2 id="stkh"></h2><div class="sgrid" id="sgrid"></div><div class="acts"><button class="btn" id="stkx" type="button">Back to the market</button></div></div></div>
 <div class="post" id="post" role="dialog" aria-modal="true" aria-label="Your postcard"><div class="card3d" id="card3d" role="button" tabindex="0" aria-label="Your postcard. Tap to turn it over."><div class="face front" id="pf"></div><div class="face back" id="pb"></div></div><p class="flipnote">Tap the card to turn it over</p><div class="acts" id="pa"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
 
@@ -548,6 +565,7 @@ const SFX={
     const gn=a.createGain();gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(v.vol||.2,t+.008);gn.gain.exponentialRampToValueAtTime(.0001,t+d);
     const body=a.createGain();body.gain.value=.25;osc.connect(mouth).connect(gn);osc.connect(body).connect(gn);gn.connect(master);osc.start(t);osc.stop(t+d+.02)},
   drum(){[0,.18,.3,.48,.6].forEach((t,i)=>{tone(i%2?140:95,t,.22,{vol:.22,to:55});hiss(t,.08,{vol:.12,freq:900,q:.8})})},           // a little festival drum
+  sticker(){[1568,2093,2637].forEach((f,i)=>tone(f,i*.07,.35,{type:'triangle',vol:.08}))},             // a little sparkle
   perfect(){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.7,{type:'triangle',vol:.12}));SFX.coin()}
 };
 function sfx(k,arg){if(muted||!armed||!SFX[k])return;try{SFX[k](arg)}catch(e){}}
@@ -692,7 +710,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');mornin
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
     setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
@@ -715,17 +733,67 @@ function endDay(){const sold=log.filter(l=>l.buy);
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
+  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Sticker book ★',showBook],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
-  $('#sum').textContent=(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
+  const ns=newStk.map(k=>STICKERS.find(x=>x.k===k).t);
+  $('#sum').textContent=(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
     :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
     :WINTER?n+' of 5 villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
     :DAY===2?n+' of 5 villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
     :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
     (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
   hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
+
+/* ---------- the sticker book: one sticker for each nudge you get to work ---------- */
+const STICKERS=[
+  {k:'The decoy effect',t:'The decoy',d:'A big jar makes the medium one look cheap',who:'goat',day:1},
+  {k:'Scarcity',t:'Only a few left',d:'Short stock makes people buy now',who:'monal',day:1},
+  {k:'Social proof',t:'Follow the crowd',d:'People buy what others are buying',who:'pika',day:1},
+  {k:'Anchoring',t:'The anchor',d:'A pricey shawl makes a cap feel small',who:'yak',day:1},
+  {k:'Where it comes from',t:'Made locally',d:'Knowing where it’s from can win a sale',who:'panda',day:1},
+  {k:'Loyalty',t:'Old friends',d:'Win someone once and they come back trusting you',who:null,day:2},
+  {k:'Reciprocity',t:'A free taste',d:'A small gift makes people want to give back',who:'marmot',day:2},
+  {k:'Loss aversion',t:'Don’t miss out',d:'Missing a chance feels worse than paying',who:'cub',day:2},
+  {k:'Charm pricing',t:'Ending in 9',d:'₹499 feels a lot less than ₹500',who:'bear',day:2},
+  {k:'Bundling',t:'Better together',d:'Two things for less feels like a deal',who:'ibex',day:3},
+  {k:'A good cause',t:'Doing good',d:'People pay more when it helps someone',who:'partridge',day:3},
+  {k:'Framing',t:'Worth it over time',d:'A big price feels small spread over years',who:'fox',day:3}];
+let STK=[],newStk=[];try{STK=JSON.parse(localStorage.getItem('md-stickers')||'[]')||[]}catch(e){}
+// which nudge, if any, made this sale happen
+function stickerFor(key,d){if(!d.buy)return null;const s=sign;
+  if(key==='goat'){if(DAY===2&&D1.goat)return 'Loyalty';return d.buy===ITEMS.medium.name&&PRICE.large>=2*PRICE.medium?'The decoy effect':null}
+  if(key==='monal')return s===1?'Scarcity':null;
+  if(key==='pika')return 'Social proof';
+  if(key==='yak'){if(WINTER)return D1.yak?'Loyalty':PRICE.shawl>=1000?'Anchoring':null;return d.buy===ITEMS.cap.name&&PRICE.shawl>=600?'Anchoring':null}
+  if(key==='panda'){if(DAY===2&&D1.panda)return 'Loyalty';return s===3?'Where it comes from':null}
+  if(key==='marmot')return tray?'Reciprocity':null;
+  if(key==='cub'){if(WINTER)return D2.cub?'Loyalty':null;return s===4?'Loss aversion':null}
+  if(key==='bear')return charm?'Charm pricing':null;
+  if(key==='ibex')return d.buy==='Chai and walnuts bundle'?'Bundling':null;
+  if(key==='partridge')return s===2?'A good cause':null;
+  if(key==='fox')return s===1?'Framing':null;
+  return null}
+function drawStkPill(){$('#stkn').textContent=STK.length+'/12'}
+function award(k){if(!k||STK.includes(k))return;STK.push(k);newStk.push(k);try{localStorage.setItem('md-stickers',JSON.stringify(STK))}catch(e){}
+  drawStkPill();sfx('sticker');const p=$('#stkp');p.classList.remove('bump');void p.offsetWidth;p.classList.add('bump');toast('New sticker! '+STICKERS.find(x=>x.k===k).t)}
+function stickerSVG(st,got,i){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','-60 -60 120 120');s.setAttribute('aria-hidden','true');
+  const COL=['','#bfe6a8','#ffd2a1','#d7e8f5'][st.day];
+  el('circle',{cx:0,cy:0,r:55,fill:'#fff',stroke:'#5b3a2e',"stroke-width":3},s);el('circle',{cx:0,cy:0,r:46,fill:got?COL:'#ece4d6'},s);
+  if(!got){el('text',{x:0,y:17,"text-anchor":'middle',style:'font:700 48px Fredoka,sans-serif;fill:#cdbba2'},s).textContent='?';return s}
+  if(!st.who){el('path',{d:'M0 26 C -44 -4 -26 -42 0 -20 C 26 -42 44 -4 0 26 Z',fill:'#e8336d',class:'ol'},s);return s}
+  const cp=el('clipPath',{id:'stc'+i},s);el('circle',{cx:0,cy:0,r:46},cp);
+  const v=g({'clip-path':`url(#stc${i})`},s),m=g({transform:'translate(0 44) scale(.44)'},v);CAST[st.who].draw(m);return s}
+function showBook(){const gr=$('#sgrid');gr.innerHTML='';
+  STICKERS.forEach((st,i)=>{const got=STK.includes(st.k),c=document.createElement('div');c.className='stc'+(got?'':' locked')+(newStk.includes(st.k)?' new':'');
+    c.appendChild(stickerSVG(st,got,i));const b=document.createElement('b'),sp=document.createElement('span');
+    b.textContent=got?st.t:'Not found yet';sp.textContent=got?st.d:st.who?'Meet '+CAST[st.who].name+' on '+DAYNAME[st.day]:'Win someone over, then see them again another day';c.append(b,sp);gr.appendChild(c)});
+  $('#stkh').textContent=STK.length===12?'All 12! You’re a real shopkeeper now.':STK.length+' of 12 stickers';
+  $('#stk').classList.add('on');sfx('clink');newStk=[]}
+$('#stkx').onclick=()=>{sfx('tap');$('#stk').classList.remove('on')};
+$('#stkp').onclick=()=>{sfx('tap');showBook()};
+drawStkPill();
 
 /* ---------- dusk: a postcard to keep ---------- */
 const PV={x:270,y:230,w:1005,h:670};              // the part of the market the front shows
