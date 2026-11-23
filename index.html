@@ -345,7 +345,7 @@ const SIGNS=[
  {t:['Everyone’s','favourite'],p:'Social proof'},
  {t:['Made in','the hills'],p:'Where it comes from'}];
 if(FEST)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
-if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Shawls that','last 10 winters'],p:'Framing'},{t:['We support','the school'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
+if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Shawls that','last 10 winters'],p:'Framing'},{t:['Each sale gives','a child a book'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
 let sign=0;
 const BD=g({class:'board',tabindex:0,role:'button','aria-label':'The chalkboard sign. Tap to change it.'});const bd=g({class:'bd'},BD);
 const bx=430,by=780;sh(bx,by+8,80);
@@ -354,7 +354,7 @@ el('rect',{x:bx-82,y:by-190,width:164,height:120,rx:14,fill:'#2f4a3a',stroke:'#a
 const l1=el('text',{x:bx,y:by-138,"text-anchor":'middle',class:'chalk'},bd),l2=el('text',{x:bx,y:by-104,"text-anchor":'middle',class:'chalk'},bd);
 el('path',{d:`M${bx-60} ${by-88} q30 8 60 0 q30 -8 60 0`,stroke:'#ffcf5a',"stroke-width":3,fill:'none'},bd);
 const tapme=g({class:'bob'},BD);el('rect',{x:bx-34,y:by-232,width:68,height:30,rx:15,fill:'#ffd34d',class:'ol',"stroke-width":3},tapme);el('text',{x:bx,y:by-211,"text-anchor":'middle',style:'font:700 16px Fredoka,sans-serif;fill:#5b3a2e'},tapme).textContent='tap!';
-function drawSign(){[l1,l2].forEach((l,i)=>{const t=SIGNS[sign].t[i];l.textContent=t;l.style.fontSize=t.length>11?'22px':''})}
+function drawSign(){[l1,l2].forEach((l,i)=>{const t=SIGNS[sign].t[i];l.textContent=t;l.style.fontSize=t.length>14?'19px':t.length>11?'22px':''})}
 drawSign();
 const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();sfx('chalk');tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”')};
 BD.addEventListener('click',nextSign);BD.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();nextSign()}});
@@ -592,10 +592,10 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
       if(C('chai')<=40)return yes('chai','Just a cup of chai for me, thanks.',why,'He only bought the chai. '+hint);
       return no('Too dear for a cold morning.',why,hint)}
     if(key==='partridge'){const so=C('socks'),why='A good cause';
-      if(s===2&&so<=300)return yes('socks','You support the school? Then I’m in!',why,'Knowing the stall supports the village school (₹10 from each sale) made Dot happy to pay more: up to ₹300 for the socks.');
+      if(s===2&&so<=300)return yes('socks','A book for a child with every sale? Then I’m in!',why,'Knowing her socks would also buy a child a book (₹10 from each sale) made Dot happy to pay more: up to ₹300.');
       if(s===2)return no(`A kind idea… but ₹${so} for socks?`,why,'The good cause moved her, but not past ₹300.');
-      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “We support the school” would have let you charge up to ₹300.');
-      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “We support the school” would have won her, at up to ₹300.')}
+      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “Each sale gives a child a book” would have let you charge up to ₹300.');
+      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “Each sale gives a child a book” would have won her, at up to ₹300.')}
     if(key==='yak'){const c=C('cap'),sw=C('shawl'),anchor=sw>=1000?Math.min(Math.floor(sw*.03)*10,500):250,lim=D1.yak?Math.max(anchor,450):anchor,why=D1.yak&&anchor<450?'Loyalty':'Anchoring';
       if(c<=lim)return yes('cap',D1.yak?'Back again! A warm cap for winter, please.':`The shawl’s ₹${sw}… so ₹${c} for a cap is fair.`,why,(D1.yak?'Kiko bought from you on the first day, so he’d pay up to ₹450 on trust alone. ':'')+(sw>=1000?`Next to the ₹${sw} shawl, he’d pay up to ₹${anchor}.`:'With no pricey shawl beside it, his anchor was low.'));
       return no(`₹${c} for a cap? Too much.`,why,`His limit today was ₹${lim}. `+(sw>=1000?'':'A shawl at ₹1,000 or more would have raised it. ')+(D1.yak?'':'Win him on Day 1 and he comes back trusting you.'))}
@@ -700,7 +700,7 @@ function endDay(){const sold=log.filter(l=>l.buy);
   try{if(DAY===1)localStorage.setItem('md-d1',JSON.stringify({goat:won('goat'),panda:won('panda'),yak:won('yak')}));if(FEST)localStorage.setItem('md-d2',JSON.stringify({cub:won('cub')}))}catch(e){}
   $('#lp').innerHTML='<small>'+DAYNAME[DAY]+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
     (costs.tastes?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+costs.tastes+'</span></div>':'')+
-    (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>To the village school</b><span>−₹'+costs.school+'</span></div>':'')+
+    (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>Books for village children</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
