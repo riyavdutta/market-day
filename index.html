@@ -690,7 +690,8 @@ const narrow=()=>$('#stage').clientWidth<W.getBoundingClientRect().width*.45;
 const focus=()=>!open&&narrow()?bx+60:sx;
 function scrollTo(x,now){const stg=$('#stage'),sc=W.getBoundingClientRect().width/1600;stg.scrollTo({left:x*sc-stg.clientWidth/2,behavior:reduce||now?'auto':'smooth'})}
 const toDay=d=>{if(d>1)location.hash='day'+d;else history.replaceState(null,'',location.pathname+location.search);location.reload()};
-const unlocked=d=>d===1||(d===2&&Object.keys(D1).length>0)||(d===3&&Object.keys(D2).length>0);
+// every day is open from the start; earlier days only matter for who comes back loyal
+const unlocked=d=>d>=1&&d<=3;
 
 /* ---------- dusk: the ledger ---------- */
 function endDay(){const sold=log.filter(l=>l.buy);
