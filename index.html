@@ -125,7 +125,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .ptog{border:0;border-radius:999px;padding:8px 16px;font:700 15px var(--font);background:#e9dccb;color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset}
 .ptog[aria-pressed="true"]{background:var(--honey)}
 .trayb{cursor:pointer}
-.toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:999px;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
+.toast{position:fixed;left:50%;bottom:44px;translate:-50% 0;z-index:50;background:var(--paper);box-shadow:0 0 0 4px var(--ink);border-radius:22px;max-width:min(520px,calc(100% - 24px));text-align:center;padding:8px 16px;font:600 16px var(--font);opacity:0;transition:opacity .25s,transform .4s var(--spring);transform:translateY(-10px)}
 .toast.on{opacity:1;transform:none}
 @media (max-width:700px){.pages{grid-template-columns:1fr}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
 .snow{fill:#fff;animation:snowfall 12s linear infinite}
@@ -345,7 +345,7 @@ const SIGNS=[
  {t:['Everyone’s','favourite'],p:'Social proof'},
  {t:['Made in','the hills'],p:'Where it comes from'}];
 if(FEST)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
-if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Under ₹5','a day!'],p:'Framing'},{t:['₹10 goes to','the school'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
+if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Shawls from','₹5 a day!'],p:'Framing',d:'The shawl’s price, spread over a year of wear'},{t:['₹10 per sale','to the school'],p:'A good cause',d:'₹10 from every sale goes to the village school'},{t:['Made in','the hills'],p:'Where it comes from'});
 let sign=0;
 const BD=g({class:'board',tabindex:0,role:'button','aria-label':'The chalkboard sign. Tap to change it.'});const bd=g({class:'bd'},BD);
 const bx=430,by=780;sh(bx,by+8,80);
@@ -354,9 +354,9 @@ el('rect',{x:bx-82,y:by-190,width:164,height:120,rx:14,fill:'#2f4a3a',stroke:'#a
 const l1=el('text',{x:bx,y:by-138,"text-anchor":'middle',class:'chalk'},bd),l2=el('text',{x:bx,y:by-104,"text-anchor":'middle',class:'chalk'},bd);
 el('path',{d:`M${bx-60} ${by-88} q30 8 60 0 q30 -8 60 0`,stroke:'#ffcf5a',"stroke-width":3,fill:'none'},bd);
 const tapme=g({class:'bob'},BD);el('rect',{x:bx-34,y:by-232,width:68,height:30,rx:15,fill:'#ffd34d',class:'ol',"stroke-width":3},tapme);el('text',{x:bx,y:by-211,"text-anchor":'middle',style:'font:700 16px Fredoka,sans-serif;fill:#5b3a2e'},tapme).textContent='tap!';
-function drawSign(){l1.textContent=SIGNS[sign].t[0];l2.textContent=SIGNS[sign].t[1]}
+function drawSign(){[l1,l2].forEach((l,i)=>{const t=SIGNS[sign].t[i];l.textContent=t;l.style.fontSize=t.length>11?'22px':''})}
 drawSign();
-const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();sfx('chalk');tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”')};
+const nextSign=()=>{if(open)return;sign=(sign+1)%SIGNS.length;drawSign();sfx('chalk');tapme.style.display='none';toast('Sign: “'+SIGNS[sign].t.join(' ')+'”'+(SIGNS[sign].d?' · '+SIGNS[sign].d:''))};
 BD.addEventListener('click',nextSign);BD.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();nextSign()}});
 
 /* ---------- festival day: the free-taste tray ---------- */
@@ -594,16 +594,16 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
     if(key==='partridge'){const so=C('socks'),why='A good cause';
       if(s===2&&so<=300)return yes('socks','Some of it goes to the school? Then I’m in!',why,'Knowing ₹10 went to the village school made Dot happy to pay more: up to ₹300 for the socks.');
       if(s===2)return no(`A kind idea… but ₹${so} for socks?`,why,'The good cause moved her, but not past ₹300.');
-      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “₹10 goes to the school” would have let you charge up to ₹300.');
-      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “₹10 goes to the school” would have won her, at up to ₹300.')}
+      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “₹10 per sale to the school” would have let you charge up to ₹300.');
+      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “₹10 per sale to the school” would have won her, at up to ₹300.')}
     if(key==='yak'){const c=C('cap'),sw=C('shawl'),anchor=sw>=1000?Math.min(Math.floor(sw*.03)*10,500):250,lim=D1.yak?Math.max(anchor,450):anchor,why=D1.yak&&anchor<450?'Loyalty':'Anchoring';
       if(c<=lim)return yes('cap',D1.yak?'Back again! A warm cap for winter, please.':`The shawl’s ₹${sw}… so ₹${c} for a cap is fair.`,why,(D1.yak?'Kiko bought from you on the first day, so he’d pay up to ₹450 on trust alone. ':'')+(sw>=1000?`Next to the ₹${sw} shawl, he’d pay up to ₹${anchor}.`:'With no pricey shawl beside it, his anchor was low.'));
       return no(`₹${c} for a cap? Too much.`,why,`His limit today was ₹${lim}. `+(sw>=1000?'':'A shawl at ₹1,000 or more would have raised it. ')+(D1.yak?'':'Win him on Day 1 and he comes back trusting you.'))}
     if(key==='fox'){const sw=C('shawl'),why='Framing';
-      if(s===1&&sw<=1800)return yes('shawl','Under ₹5 a day? For a shawl this warm, that’s nothing!',why,`₹${sw} sounds like a lot. “Under ₹5 a day” made it feel small. With it, Tess pays up to ₹1,800.`);
+      if(s===1&&sw<=1800)return yes('shawl','Just ₹5 a day for a shawl this warm? That’s nothing!',why,`₹${sw} sounds like a lot. “Shawls from ₹5 a day” made it feel small. With it, Tess pays up to ₹1,800.`);
       if(s===1)return no(`Even at ₹5 a day, ₹${sw} is too much.`,why,'Framing worked on her, but not past ₹1,800.');
-      if(sw<=900)return yes('shawl',`A thick shawl for ₹${sw}? Yes please.`,why,'She bought because it was cheap. “Under ₹5 a day” would have let you charge up to ₹1,800.');
-      return no(`₹${sw}? That’s a lot of money.`,why,'One big number scared her off. “Under ₹5 a day” makes the same price feel small, and she’d pay up to ₹1,800.')}
+      if(sw<=900)return yes('shawl',`A thick shawl for ₹${sw}? Yes please.`,why,'She bought because it was cheap. “Shawls from ₹5 a day” would have let you charge up to ₹1,800.');
+      return no(`₹${sw}? That’s a lot of money.`,why,'One big number scared her off. “Shawls from ₹5 a day” makes the same price feel small, and she’d pay up to ₹1,800.')}
     if(key==='cub'){const h=C('honey'),lim=D2.cub?300:180,why='Loyalty';
       if(h<=lim)return yes('honey',D2.cub?'Remember me from the festival? Honey for the cold, please!':`Honey for ₹${h}. Good for a cold day.`,why,D2.cub?'Bo bought from you on Festival day, so he trusts you: up to ₹300 for honey.':'He paid what he’d pay any stall: up to ₹180. Win him on Festival day and he’d trust you with ₹300.');
       return no(`₹${h} for honey? Not from a stall I don’t know.`,why,`His limit was ₹${lim}. `+(D2.cub?'':'Win him on Festival day and he’d trust you with up to ₹300.'))}}
