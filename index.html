@@ -119,6 +119,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .stc span{display:block;font:500 13px/1.35 var(--font);color:var(--ink);margin-top:2px}
 .stc.locked{background:#fbf3e3;box-shadow:0 0 0 3px #eadcc4}
 .stc.locked b{color:#b8a48f}.stc.locked span{color:#9a7b62}
+.newbuy{transform-box:fill-box;transform-origin:center;animation:stpop .5s var(--spring)}
 .stc.new{animation:stpop .7s var(--spring)}
 @keyframes stpop{0%{transform:scale(.5) rotate(-8deg)}100%{transform:none}}
 .album .acts{flex:none;display:flex;justify-content:center}
@@ -292,8 +293,8 @@ if(FEST){
   // a marigold arch over the path, with a banner
   const ar=g({});[52,258].forEach(x=>el('rect',{x:x-10,y:588,width:20,height:236,rx:6,fill:'#a86b43',class:'ol'},ar));
   const ap=el('path',{d:'M40 600 Q155 520 270 600',fill:'none',stroke:'#a86b43',"stroke-width":14,"stroke-linecap":'round'},ar),aL=ap.getTotalLength();
-  for(let i=0;i<=18;i++){const q=ap.getPointAtLength(aL*i/18);el('circle',{cx:q.x,cy:q.y+4,r:10,fill:i%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":2},ar)}
-  [70,110,200,240].forEach(x=>{for(let k=0;k<4;k++)el('circle',{cx:x,cy:600+(x<155?(155-x):(x-155))*-.35+38+k*17,r:7,fill:k%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":1.5},ar)});
+  for(let i=0;i<=18;i++){const q=ap.getPointAtLength(aL*i/18);el('circle',{cx:q.x,cy:q.y+4,r:9,fill:FUN[i%FUN.length],class:'ol',"stroke-width":2},ar)}
+  [70,110,200,240].forEach(x=>{for(let k=0;k<4;k++)el('circle',{cx:x,cy:600+(x<155?(155-x):(x-155))*-.35+38+k*17,r:7,fill:FUN[(k+x)%FUN.length],class:'ol',"stroke-width":1.5},ar)});
   el('rect',{x:80,y:510,width:150,height:40,rx:20,fill:'#800020',class:'ol'},ar);el('text',{x:155,y:537,"text-anchor":'middle',style:'font:700 21px Fredoka,sans-serif;fill:#fff8ea'},ar).textContent='Hill Festival';
   // a rangoli on the grass
   const rg=g({transform:'translate(985 885) scale(1 .42)'});
@@ -360,8 +361,8 @@ if(FEST)[[sx-215,-1],[sx+215,1]].forEach(([x,d])=>{const bl=g({class:'bob',style
 if(WINTER){let d=`M${sx-238} ${sy-216}`;for(let k=0;k<12;k++)d+=' q19.8 -18 39.6 0';el('path',{d:d+' v8 h-475 z',fill:'#fff',class:'ol',"stroke-width":3},S);
   for(let k=0;k<10;k++)el('path',{d:`M${sx-198+k*43} ${sy-143} l4 16 l4 -16 z`,fill:'#e2f4ff',class:'ol',"stroke-width":1.5},S);
   let c=`M${sx-232} ${sy-38}`;for(let k=0;k<8;k++)c+=' q29 -12 58 0';el('path',{d:c+' z',fill:'#fff',class:'ol',"stroke-width":2.5},S)}
-// festival day: a marigold garland along the awning
-if(DAY===2)for(let k=0;k<=22;k++){const x=sx-232+k*21.1,y=sy-212+Math.sin(k/22*Math.PI)*16;el('circle',{cx:x,cy:y,r:9,fill:k%2?'#ffb300':'#ff7a1a',class:'ol',"stroke-width":2},S)}
+// festival day: a string of fairy lights along the awning
+if(DAY===2)for(let k=0;k<=22;k++){const x=sx-232+k*21.1,y=sy-212+Math.sin(k/22*Math.PI)*16;el('circle',{cx:x,cy:y,r:8,fill:FUN[k%FUN.length],class:'ol',"stroke-width":2},S)}
 // coin jar
 el('rect',{x:sx+232,y:sy+60,width:40,height:52,rx:12,fill:'#bfe9ff',class:'ol',opacity:.95},S);el('rect',{x:sx+228,y:sy+52,width:48,height:12,rx:5,fill:'#a86b43',class:'ol',"stroke-width":3},S);
 
@@ -509,9 +510,45 @@ const CAST={
    el('rect',{x:-40,y:-138,width:80,height:66,rx:22,fill:'#d9904a',class:'ol'},p);el('path',{d:'M-40 -104 q0 30 22 32 h36 q22 -2 22 -32 q-20 12 -40 12 q-20 0 -40 -12 z',fill:'#b9b4ad'},p);
    el('ellipse',{cx:0,cy:-92,rx:14,ry:10,fill:'#fff8ea'},p);eyes(p,0,-112,.8);el('circle',{cx:0,cy:-96,r:4.5,fill:'#2a1a1e'},p);
    el('path',{d:'M-26 -66 q26 12 52 0',stroke:'#800020',"stroke-width":8,fill:'none',"stroke-linecap":'round'},p)}}};
-function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);
+/* ---------- clothes: dressed for the day, and wearing (or carrying) what they bought ---------- */
+// where each villager's head, neck and shoulders are: head centre y, head radius, neck y, shoulder half-width
+const FIT={goat:{hy:-104,hr:34,ny:-76,sw:44},monal:{hy:-108,hr:30,ny:-82,sw:40},pika:{hy:-62,hr:40,ny:-30,sw:46},yak:{hy:-110,hr:36,ny:-76,sw:56},
+  panda:{hy:-104,hr:34,ny:-68,sw:40},cub:{hy:-104,hr:36,ny:-72,sw:42},marmot:{hy:-116,hr:32,ny:-86,sw:44},bear:{hy:-116,hr:40,ny:-80,sw:58},
+  ibex:{hy:-104,hr:33,ny:-72,sw:44},partridge:{hy:-112,hr:28,ny:-88,sw:46},fox:{hy:-108,hr:38,ny:-68,sw:40}};
+function beanie(p,f,c){const top=f.hy-f.hr,w=f.hr*.86,y0=top+f.hr*.55;el('path',{d:`M${-w} ${y0} Q ${-w} ${top-8} 0 ${top-10} Q ${w} ${top-8} ${w} ${y0} Z`,fill:c,class:'ol',"stroke-width":3},p);
+  el('rect',{x:-w-3,y:y0-8,width:w*2+6,height:12,rx:6,fill:'#fff8ea',class:'ol',"stroke-width":2.5},p);el('circle',{cx:0,cy:top-14,r:8,fill:'#fff8ea',class:'ol',"stroke-width":2.5},p)}
+function scarf(p,f,c,c2){const w=f.sw*.72,y=f.ny,d=`M${-w} ${y} Q 0 ${y+18} ${w} ${y}`;
+  el('path',{d,fill:'none',stroke:'#5b3a2e',"stroke-width":16,"stroke-linecap":'round'},p);el('path',{d,fill:'none',stroke:c,"stroke-width":11,"stroke-linecap":'round'},p);el('path',{d,fill:'none',stroke:c2,"stroke-width":11,"stroke-dasharray":'6 8'},p);
+  el('rect',{x:w*.35,y:y+4,width:12,height:28,rx:4,fill:c,class:'ol',"stroke-width":2.5,transform:`rotate(-12 ${w*.35} ${y+4})`},p)}
+function earmuffs(p,f,c){const top=f.hy-f.hr;el('path',{d:`M${-f.hr} ${f.hy-4} Q 0 ${top-22} ${f.hr} ${f.hy-4}`,fill:'none',stroke:'#5b3a2e',"stroke-width":5},p);[-1,1].forEach(k=>el('circle',{cx:k*f.hr,cy:f.hy-2,r:11,fill:c,class:'ol',"stroke-width":2.5},p))}
+// festival day: a striped party hat, worn at a jaunty angle, and a balloon on a string
+const FESTC={goat:['#2f5bff','#ffd34d','#d02b8f'],marmot:['#d02b8f','#fff8ea','#00a9bd'],cub:['#00a36c','#ffd34d','#ff7a45'],bear:['#7a3cff','#fff8ea','#ffd34d'],panda:['#00a9bd','#ffd34d','#2f5bff']};
+function partyHat(p,f,c){const top=f.hy-f.hr-(f===FIT.goat?18:0),b=f.hr*.5,h=g({transform:`rotate(-14 0 ${top})`},p);
+  el('path',{d:`M${-b} ${top+8} L 0 ${top-46} L ${b} ${top+8} Z`,fill:c[0],class:'ol',"stroke-width":3},h);
+  [[-b*.62,top-6,b*.62],[-b*.3,top-26,b*.3]].forEach(([x1,y,x2])=>el('path',{d:`M${x1} ${y} L ${x2} ${y}`,stroke:c[1],"stroke-width":6,"stroke-linecap":'round'},h));
+  el('circle',{cx:0,cy:top-48,r:7,fill:c[1],class:'ol',"stroke-width":2.5},h)}
+function balloon(p,f,c){const x=-f.sw-16,y=-210;el('path',{d:`M${-f.sw+6} -44 Q ${x-14} -110 ${x} ${y+28}`,fill:'none',stroke:'#7a5a44',"stroke-width":2},p);
+  const bl=g({class:'bob',style:'animation-duration:2.2s'},p);el('ellipse',{cx:x,cy:y,rx:19,ry:24,fill:c[2],class:'ol',"stroke-width":3},bl);el('path',{d:`M${x-4} ${y+24} l4 6 l4 -6 z`,fill:c[2],class:'ol',"stroke-width":2},bl);el('ellipse',{cx:x-7,cy:y-8,rx:5,ry:7,fill:'#fff',opacity:.6},bl)}
+// what everyone wears for the day: marigolds at the festival, woollies in winter
+function outfit(p,key){const f=FIT[key];if(!f)return;
+  if(FEST&&FESTC[key]){partyHat(p,f,FESTC[key]);balloon(p,f,FESTC[key])}
+  if(WINTER){const w={ibex:()=>earmuffs(p,f,'#ff6b8a'),partridge:()=>{scarf(p,f,'#00a9bd','#fff8ea');beanie(p,f,'#ffd34d')},yak:()=>{scarf(p,f,'#d02b8f','#fff8ea');earmuffs(p,f,'#00a9bd')},fox:()=>beanie(p,f,'#2f5bff'),cub:()=>beanie(p,f,'#d02b8f')}[key];if(w)w()}}
+// what they bought: caps go on, shawls go round the shoulders, socks go on the feet, everything else goes in a bag
+function wear(p,key,buy){const f=FIT[key];if(!f||!buy)return;const n=buy.toLowerCase(),gp=g({class:'newbuy'},p);
+  if(/cap/.test(n)){const top=f.hy-f.hr,w=f.hr*.8,y0=top+f.hr*.5;el('path',{d:`M${-w} ${y0} q0 ${-f.hr*.95} ${w} ${-f.hr*.95} q${w} 0 ${w} ${f.hr*.95} z`,fill:'#3a3a6e',class:'ol',"stroke-width":3},gp);
+    el('rect',{x:-w-2,y:y0-12,width:w*2+4,height:13,rx:4,fill:'#e3bd00',class:'ol',"stroke-width":2.5},gp);for(let k=0;k<4;k++)el('rect',{x:-w+5+k*(w*2-10)/4,y:y0-10,width:6,height:9,rx:1.5,fill:FUN[k]},gp);return}
+  if(/shawl/.test(n)){const w=f.sw,y=f.ny,thick=/thick/.test(n);el('path',{d:`M${-w} ${y+2} Q 0 ${y+28} ${w} ${y+2} L ${w*.88} ${y+38} Q 0 ${y+62} ${-w*.88} ${y+38} Z`,fill:thick?'#800020':'#fff8ea',class:'ol',"stroke-width":3},gp);
+    [['#d02b8f',14],['#00a9bd',24],['#e3bd00',32]].forEach(([c,dy])=>el('path',{d:`M${-w*.9} ${y+dy} Q 0 ${y+dy+24} ${w*.9} ${y+dy}`,fill:'none',stroke:thick?'#ffd34d':c,"stroke-width":3},gp));
+    for(let k=0;k<7;k++)el('path',{d:`M${-w*.6+k*w*.2} ${y+49} v9`,stroke:'#5b3a2e',"stroke-width":2},gp);return}
+  if(/socks/.test(n)){[-11,11].forEach(x=>{el('rect',{x:x-6,y:-16,width:12,height:16,rx:4,fill:'#d02b8f',class:'ol',"stroke-width":2},gp);el('rect',{x:x-6,y:-12,width:12,height:3,fill:'#fff8ea'},gp)});return}
+  const bx=f.sw+4,by=-30;el('path',{d:`M${bx+6} ${by-24} q11 -18 22 0`,fill:'none',stroke:'#a86b43',"stroke-width":3.5},gp);const it=g({},gp);
+  if(/honey/.test(n)){el('rect',{x:bx+8,y:by-36,width:18,height:20,rx:5,fill:'#f2a91c',class:'ol',"stroke-width":2.5},it);el('rect',{x:bx+6,y:by-40,width:22,height:7,rx:3,fill:'#d02b8f',class:'ol',"stroke-width":2},it)}
+  else if(/apples/.test(n))[[10,-26],[24,-28],[17,-36]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:8,fill:'#ff4d6d',class:'ol',"stroke-width":2},it));
+  else{if(/chai/.test(n))el('rect',{x:bx+6,y:by-38,width:14,height:16,rx:3,fill:'#fff8ea',class:'ol',"stroke-width":2},it);if(/walnut/.test(n))[[22,-28],[28,-35]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:6,fill:'#a0703c',class:'ol',"stroke-width":2},it))}
+  el('path',{d:`M${bx} ${by-24} h34 l-3 36 h-28 z`,fill:'#d9b77a',class:'ol',"stroke-width":3},gp);el('path',{d:`M${bx+6} ${by-12} h22`,stroke:'#a86b43',"stroke-width":2,"stroke-dasharray":'3 3'},gp)}
+function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);outfit(inner,key);
   const em=g({class:'emote'},o);el('path',{d:'M-28 -230 h56 a14 14 0 0 1 14 14 v20 a14 14 0 0 1 -14 14 h-20 l-8 12 l-8 -12 h-20 a14 14 0 0 1 -14 -14 v-20 a14 14 0 0 1 14 -14z',fill:'#fffdf6',class:'ol',"stroke-width":3.5},em);
-  const et=el('text',{x:0,y:-196,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},em);return {key,v,o,em,et}}
+  const et=el('text',{x:0,y:-196,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},em);return {key,v,o,em,et,inner}}
 // butterflies and petals for life
 if(!WINTER)for(let i=0;i<4;i++){const b=g({class:'bfly',style:'animation-delay:'+(-i*3.5)+'s'});const x=200+i*350,y=520+(i%2)*160;const c=FUN[i*2%FUN.length];
   el('ellipse',{cx:x-8,cy:y,rx:9,ry:12,fill:c,class:'w ol',"stroke-width":2},b);el('ellipse',{cx:x+8,cy:y,rx:9,ry:12,fill:c,class:'w r ol',"stroke-width":2},b);el('rect',{x:x-2,y:y-8,width:4,height:16,rx:2,fill:'#5b3a2e'},b)}
@@ -710,7 +747,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');mornin
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
     setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);wear(v.inner,v.key,d.buy);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
@@ -802,7 +839,7 @@ function postFront(){const f=W.cloneNode(true);f.removeAttribute('class');f.remo
   f.querySelectorAll('text').forEach(t=>{if(['tap!','Free taste?','Bundle?'].includes(t.textContent))t.parentNode.remove()});
   // everyone who bought from you poses in front of the stall
   const buyers=log.filter(l=>l.buy),row=g({},f),gap=128,x0=720-(buyers.length-1)*gap/2;
-  buyers.forEach((l,i)=>{const v=g({transform:`translate(${x0+i*gap} ${856+(i%2)*10}) scale(.82)`},row);sh(0,6,40,v);CAST[l.key].draw(v)});
+  buyers.forEach((l,i)=>{const v=g({transform:`translate(${x0+i*gap} ${856+(i%2)*10}) scale(.82)`},row);sh(0,6,40,v);CAST[l.key].draw(v);outfit(v,l.key);wear(v,l.key,l.buy)});
   // greetings from…
   const bn=g({},f),bx0=PV.x+28,by0=PV.y+26;el('rect',{x:bx0,y:by0,width:430,height:104,rx:24,fill:'#fffaf0',class:'ol'},bn);
   el('text',{x:bx0+26,y:by0+40,style:'font:500 24px Fredoka,sans-serif;fill:#9a7b62'},bn).textContent='Greetings from the';
