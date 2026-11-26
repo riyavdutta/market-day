@@ -750,9 +750,14 @@ const hs=g({});el('rect',{x:1420,y:300,width:80,height:60,rx:6,fill:'#fff8ea',cl
 const sm=g({class:'smoke'});for(let k=0;k<3;k++)el('circle',{cx:1490,cy:262,r:10},sm);
 const duskL=el('rect',{x:0,y:0,width:1600,height:1000,class:'dusk'});
 // night: the whole scene under a deep blue sky, then the lights, moon, stars and fireflies on top
-if(NIGHT){duskL.setAttribute('style','fill:#1b2258;opacity:.42');sun.style.display='none';
+if(NIGHT){duskL.setAttribute('style','fill:#141a4a;opacity:.6');sun.style.display='none';
+  const hg=el('radialGradient',{id:'holegrad'},defs);[['0','#000'],['.5','#000'],['.78','#888'],['1','#fff']].forEach(([o,c])=>el('stop',{offset:o,'stop-color':c},hg));
+  const mk=el('mask',{id:'nightmask',maskUnits:'userSpaceOnUse',x:0,y:0,width:1600,height:1000},defs);el('rect',{x:0,y:0,width:1600,height:1000,fill:'#fff'},mk);el('ellipse',{cx:sx+40,cy:sy+30,rx:470,ry:380,fill:'url(#holegrad)'},mk);
+  duskL.setAttribute('mask','url(#nightmask)');
   const gd=el('radialGradient',{id:'warmglow'},defs);el('stop',{offset:'0','stop-color':'#ffd27a','stop-opacity':'.55'},gd);el('stop',{offset:'1','stop-color':'#ffd27a','stop-opacity':'0'},gd);
-  el('ellipse',{cx:sx,cy:sy-40,rx:460,ry:330,fill:'url(#warmglow)',style:'mix-blend-mode:screen;pointer-events:none'});
+  el('ellipse',{cx:sx+30,cy:sy-20,rx:430,ry:320,fill:'url(#warmglow)',style:'mix-blend-mode:screen;pointer-events:none;opacity:.55'});
+  // a row of warm bulbs along the edge of the awning
+  for(let k=0;k<10;k++){const x=sx-194+k*43,y=sy-140;el('circle',{cx:x,cy:y,r:13,fill:'#ffd27a',class:'glowl',style:'filter:blur(5px)'});el('circle',{cx:x,cy:y,r:5,fill:'#fff1b0',class:'ol',"stroke-width":1.5})}
   for(let i=0;i<70;i++)el('circle',{cx:Math.random()*1600,cy:Math.random()*250,r:.8+Math.random()*1.8,class:'star',style:'animation-delay:'+(-Math.random()*3)+'s;animation-duration:'+(2+Math.random()*3)+'s'});
   el('circle',{cx:1390,cy:90,r:70,fill:'#fff3c4',opacity:.25,style:'filter:blur(12px)'});el('circle',{cx:1390,cy:90,r:44,fill:'#fbf6dc',class:'ol',"stroke-width":3});[[1376,80,8],[1402,104,6],[1398,74,4]].forEach(([x,y,r])=>el('circle',{cx:x,cy:y,r,fill:'#e9e2bf'}));
   el('circle',{cx:1440,cy:332,r:26,fill:'#ffcf5a',class:'glowl',style:'filter:blur(8px)'});el('rect',{x:1428,y:320,width:22,height:22,rx:4,fill:'#ffcf5a',class:'ol',"stroke-width":3});
@@ -840,7 +845,8 @@ function startAmbience(){if(amb||muted||!armed||document.hidden)return;const a=a
       every(1300,()=>{if(dusk()<.15)return;for(let k=0;k<6;k++)setTimeout(()=>pop(.05,1500+Math.random()*2500),k*60);ping(70,.5,{to:40,vol:.03})}); // fireworks once dusk falls
     }else every(2400,()=>{const f=2200+Math.random()*1400,n=2+Math.floor(Math.random()*3);for(let k=0;k<n;k++)ping(f*(1+Math.random()*.1),.09,{to:f*1.35,vol:.016,at:k*.12})}); // birds
   }}
-function stopAmbience(){if(!amb)return;const a=AC,m=amb;amb=null;m.timers.forEach(clearTimeout);try{m.out.gain.cancelScheduledValues(a.currentTime);m.out.gain.setValueAtTime(m.out.gain.value,a.currentTime);m.out.gain.linearRampToValueAtTime(0,a.currentTime+.5)}catch(e){}
+function stopAmbience(now){if(!amb)return;const a=AC,m=amb;amb=null;m.timers.forEach(clearTimeout);
+  if(now){m.src.forEach(x=>{try{x.stop()}catch(e){}});try{m.out.disconnect()}catch(e){}return}try{m.out.gain.cancelScheduledValues(a.currentTime);m.out.gain.setValueAtTime(m.out.gain.value,a.currentTime);m.out.gain.linearRampToValueAtTime(0,a.currentTime+.5)}catch(e){}
   setTimeout(()=>{m.src.forEach(x=>{try{x.stop()}catch(e){}});m.out.disconnect()},700)}
 // quiet when the tab is in the background
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAmbience();else startAmbience()},SIG);
@@ -866,7 +872,7 @@ const VOW={a:800,e:1700,i:2300,o:560,u:420,y:2000};
 const sndBtn=$('#snd');
 function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
 drawSnd();
-sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap');if(muted)stopAmbience();else startAmbience()},SIG);
+sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;if(muted){stopAmbience(true);if(AC)AC.suspend()}else{if(AC)AC.resume();sfx('tap');startAmbience()}},SIG);
 
 /* ---------- the HUD and talk ---------- */
 const talkEl=$('#talk'),sayEl=$('#say'),acts=$('#acts'),who=$('#who');let typing=null;
