@@ -670,7 +670,7 @@ if(WINTER){el('circle',{cx:1440,cy:332,r:26,fill:'#ffcf5a',class:'glowl',style:'
 let AC=null,master=null,muted=false,armed=false;
 try{muted=localStorage.getItem('md-muted')==='1'}catch(e){}
 // browsers only allow sound after the first tap or key press
-const arm=()=>{armed=true};addEventListener('pointerdown',arm,{once:true});addEventListener('keydown',arm,{once:true});
+const arm=()=>{armed=true;setTimeout(startAmbience,50)};addEventListener('pointerdown',arm,{once:true});addEventListener('keydown',arm,{once:true});
 function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.55;master.connect(AC.destination)}
   if(AC.state==='suspended')AC.resume();return AC}
 function tone(f,t0,dur,o={}){const a=ac();if(!a)return;const t=a.currentTime+t0,osc=a.createOscillator(),gn=a.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(f,t);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,t+dur);
@@ -702,6 +702,39 @@ const SFX={
   perfect(){[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.7,{type:'triangle',vol:.12}));SFX.coin()}
 };
 function sfx(k,arg){if(muted||!armed||!SFX[k])return;try{SFX[k](arg)}catch(e){}}
+/* ---------- background sounds: a soundscape for each day, quiet under everything else ---------- */
+let amb=null;
+function startAmbience(){if(amb||muted||!armed||document.hidden)return;const a=ac();if(!a)return;
+  const out=a.createGain();out.gain.setValueAtTime(0,a.currentTime);out.gain.linearRampToValueAtTime(1,a.currentTime+3);out.connect(master);
+  amb={out,src:[],timers:[]};
+  const buf=(()=>{const n=a.sampleRate*4|0,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return b})();
+  // a looping bed of filtered noise: river, wind or crowd; a slow wobble keeps it alive
+  const bed=(type,freq,q,vol,wob,onFreq)=>{const s=a.createBufferSource();s.buffer=buf;s.loop=true;s.loopStart=Math.random();const f=a.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;
+    const gn=a.createGain();gn.gain.value=vol;s.connect(f).connect(gn).connect(out);s.start();amb.src.push(s);
+    if(wob){const o=a.createOscillator(),og=a.createGain();o.frequency.value=wob[0];og.gain.value=wob[1];o.connect(og).connect(onFreq?f.frequency:gn.gain);o.start();amb.src.push(o)}};
+  const ping=(f,dur,o={})=>{const t=a.currentTime+(o.at||0),osc=a.createOscillator(),gn=a.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(f,t);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,t+dur);
+    gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(o.vol||.02,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);osc.connect(gn).connect(out);osc.start(t);osc.stop(t+dur+.05)};
+  const pop=(vol,freq)=>{const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;const gn=a.createGain(),t=a.currentTime;gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.0001,t+.12);s.connect(f).connect(gn).connect(out);s.start(t,Math.random()*3,.15)};
+  const every=(ms,fn)=>{const t=()=>{if(!amb)return;try{fn()}catch(e){}amb.timers.push(setTimeout(t,ms*(.6+Math.random()*.8)))};amb.timers.push(setTimeout(t,ms*Math.random()))};
+  const dusk=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dusk'))||0;
+  if(WINTER){
+    bed('lowpass',420,.5,.07,[.06,260],true);                      // wind that rises and falls
+    bed('bandpass',1500,4,.012,[.09,.01]);                          // a thin whistle in it
+    every(700,()=>ping(160+Math.random()*140,.09,{to:380,vol:.022})); // the kettle, quietly bubbling
+  }else{
+    bed('bandpass',650,.6,.045,[.13,.012]);                         // the river
+    if(FEST){
+      bed('bandpass',420,1.1,.045,[.27,.02]);                       // a crowd murmuring at the fair
+      const scale=[392,440,523,587,659,784];let i=2;
+      every(420,()=>{if(Math.random()<.45)return;i=Math.max(0,Math.min(scale.length-1,i+[-1,1,2,-2][Math.floor(Math.random()*4)]));ping(scale[i],.6,{type:'triangle',vol:.018})}); // a gentle tune
+      every(1700,()=>{ping(92,.25,{to:55,vol:.035});ping(130,.18,{to:70,vol:.02,at:.36})});                                         // a distant drum
+      every(1300,()=>{if(dusk()<.15)return;for(let k=0;k<6;k++)setTimeout(()=>pop(.05,1500+Math.random()*2500),k*60);ping(70,.5,{to:40,vol:.03})}); // fireworks once dusk falls
+    }else every(2400,()=>{const f=2200+Math.random()*1400,n=2+Math.floor(Math.random()*3);for(let k=0;k<n;k++)ping(f*(1+Math.random()*.1),.09,{to:f*1.35,vol:.016,at:k*.12})}); // birds
+  }}
+function stopAmbience(){if(!amb)return;const a=AC,m=amb;amb=null;m.timers.forEach(clearTimeout);try{m.out.gain.cancelScheduledValues(a.currentTime);m.out.gain.setValueAtTime(m.out.gain.value,a.currentTime);m.out.gain.linearRampToValueAtTime(0,a.currentTime+.5)}catch(e){}
+  setTimeout(()=>{m.src.forEach(x=>{try{x.stop()}catch(e){}});m.out.disconnect()},700)}
+// quiet when the tab is in the background
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAmbience();else startAmbience()});
 function steps(ms){if(reduce||muted)return;let n=0;const t=setInterval(()=>{sfx('step');if((n+=320)>=ms)clearInterval(t)},320)}
 // every speaker has their own babble: a pitch, a tone colour, and a little character
 const VOX={
@@ -721,7 +754,7 @@ const VOW={a:800,e:1700,i:2300,o:560,u:420,y:2000};
 const sndBtn=$('#snd');
 function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
 drawSnd();
-sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap')});
+sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap');if(muted)stopAmbience();else startAmbience()});
 
 /* ---------- the HUD and talk ---------- */
 const talkEl=$('#talk'),sayEl=$('#say'),acts=$('#acts'),who=$('#who');let typing=null;
