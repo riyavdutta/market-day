@@ -169,6 +169,8 @@ em.hts{font-style:normal;font-size:13px;margin-left:6px}
 .toast.on{opacity:1;transform:none}
 @media (max-width:700px){.pages{grid-template-columns:1fr}.sum{font-size:15px}.book .acts .btn{padding:10px 16px;font-size:15px}.ledger{padding:10px}.pill{font-size:15px;padding:6px 12px 6px 8px}.pill .ic{width:24px;height:24px}.hud.l .pill.title{display:none}#sndtx{display:none}.talk{padding:24px 20px 14px}}
 .snow{fill:#fff;animation:snowfall 12s linear infinite}
+.rain{stroke:#e6f1fb;stroke-width:2.5;stroke-linecap:round;opacity:.55;animation:rainfall .9s linear infinite}
+@keyframes rainfall{0%{transform:translate(0,-80px)}100%{transform:translate(-60px,1080px)}}
 @keyframes snowfall{0%{transform:translate(0,-40px)}100%{transform:translate(-90px,1080px)}}
 .conf{animation:fall 9s linear infinite}
 .glowl{opacity:calc(.3 + var(--dusk) * 1.5);pointer-events:none}
@@ -208,6 +210,10 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Day 1 is the first market; #day2 is Festival day, with new villagers and new tools
 const DAY={'#day2':2,'#day3':3}[location.hash]||1,KP=DAY===1?'md-':'md'+DAY+'-',FEST=DAY===2,WINTER=DAY===3;
 const DAYNAME=['','Market Day','Festival day','Winter market'];
+// the weather changes what people want: rain sells warm things, a blizzard sells hot drinks and woollies
+const WEATHER=WINTER?(Math.random()<.4?'blizzard':'snow'):(Math.random()<.4?'rain':'sun');
+const WF={};if(WEATHER==='rain'){WF.yak=1.2;WF.cub=1.2;WF.monal=.85;WF.pika=.85}if(WEATHER==='blizzard'){WF.ibex=1.15;WF.partridge=1.15;WF.fox=1.1}
+const WXL={rain:DAY===2?'A light rain at the festival, so warm things will sell well. ':'It’s drizzling, so warm things will sell and fruit may not. ',blizzard:'A proper blizzard today! Hot drinks and woollies will fly. '}[WEATHER]||'';
 if(DAY>1){document.title=DAYNAME[DAY]+' · Market Day';$('.pill.title b').textContent=DAYNAME[DAY]}
 const NS='http://www.w3.org/2000/svg',W=$('#w');
 const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
@@ -232,7 +238,7 @@ if(WINTER){defs.querySelector('#sky').innerHTML='<stop offset="0" stop-color="#b
   defs.querySelector('#lawn').innerHTML='<rect width="100" height="100" fill="#f4f7fb"/><rect width="50" height="50" fill="#eaf0f6"/><rect x="50" y="50" width="50" height="50" fill="#eaf0f6"/><circle cx="22" cy="28" r="2.5" fill="#d3dfea"/><circle cx="74" cy="78" r="2.5" fill="#d3dfea"/><circle cx="80" cy="20" r="2" fill="#d3dfea"/>'}
 /* ---------- sky, peaks, terraces ---------- */
 el('rect',{x:0,y:0,width:1600,height:300,fill:'url(#sky)'});
-const sun=g({class:'sun'});el('circle',{cx:1390,cy:90,r:56,fill:FEST?'#ffb347':'#ffd34d',class:'ol'},sun);
+const sun=g({class:'sun'});$('#clock .ic').textContent={rain:'☂',snow:'❄',blizzard:'❄'}[WEATHER]||'☀';el('circle',{cx:1390,cy:90,r:56,fill:FEST?'#ffb347':'#ffd34d',class:'ol'},sun);
 [[180,70],[620,50],[1000,96]].forEach(([x,y],i)=>{const c=g({style:'animation:drift '+(70+i*20)+'s linear infinite;animation-delay:'+(-i*25)+'s'});[[0,0,30],[30,-12,26],[58,0,24],[28,8,28]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx,cy:y+dy,r,fill:FEST?'#ffe6ea':'#fff'},c))});
 const st=document.createElement('style');st.textContent='@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(1800px)}}';document.head.appendChild(st);
 el('path',{d:'M0 250 L120 150 L200 190 L330 80 L430 170 L560 110 L690 200 L820 90 L950 180 L1080 70 L1220 170 L1350 100 L1480 180 L1600 130 L1600 300 L0 300Z',fill:FEST?'#c8b2df':'#b9c6ec',class:'ol'});
@@ -651,6 +657,8 @@ function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transf
 // butterflies and petals for life
 if(!WINTER)for(let i=0;i<4;i++){const b=g({class:'bfly',style:'animation-delay:'+(-i*3.5)+'s'});const x=200+i*350,y=520+(i%2)*160;const c=FUN[i*2%FUN.length];
   el('ellipse',{cx:x-8,cy:y,rx:9,ry:12,fill:c,class:'w ol',"stroke-width":2},b);el('ellipse',{cx:x+8,cy:y,rx:9,ry:12,fill:c,class:'w r ol',"stroke-width":2},b);el('rect',{x:x-2,y:y-8,width:4,height:16,rx:2,fill:'#5b3a2e'},b)}
+if(WEATHER==='rain'){sun.style.display='none';el('rect',{x:0,y:0,width:1600,height:330,fill:'#7d8aa0',opacity:.35});for(let i=0;i<90;i++){const x=Math.random()*1800,y=Math.random()*-200;el('path',{d:`M${x} ${y} l-6 26`,class:'rain',style:'animation-delay:'+(-Math.random()*1)+'s;animation-duration:'+(.7+Math.random()*.4)+'s'})}}
+if(WEATHER==='blizzard')for(let i=0;i<60;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2+Math.random()*3.5,class:'snow',style:'animation-delay:'+(-Math.random()*6)+'s;animation-duration:'+(4+Math.random()*3)+'s'});
 if(WINTER)for(let i=0;i<46;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2.5+Math.random()*4,class:'snow',style:'animation-delay:'+(-Math.random()*12)+'s;animation-duration:'+(9+Math.random()*7)+'s'});
 else if(FEST)for(let i=0;i<30;i++)el('rect',{x:Math.random()*1700,y:Math.random()*200,width:9,height:5,fill:FUN[i%FUN.length],class:'conf',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(7+Math.random()*5)+'s'});
 else for(let i=0;i<12;i++)el('ellipse',{cx:Math.random()*1700,cy:Math.random()*200,rx:6,ry:4,class:'petal',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(8+Math.random()*5)+'s'});
@@ -720,6 +728,8 @@ function startAmbience(){if(amb||muted||!armed||document.hidden)return;const a=a
   const pop=(vol,freq)=>{const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;const gn=a.createGain(),t=a.currentTime;gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.0001,t+.12);s.connect(f).connect(gn).connect(out);s.start(t,Math.random()*3,.15)};
   const every=(ms,fn)=>{const t=()=>{if(!amb)return;try{fn()}catch(e){}amb.timers.push(setTimeout(t,ms*(.6+Math.random()*.8)))};amb.timers.push(setTimeout(t,ms*Math.random()))};
   const dusk=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dusk'))||0;
+  if(WEATHER==='rain')bed('highpass',2600,.4,.035,[.2,.008]);                  // rain pattering
+  if(WEATHER==='blizzard')bed('lowpass',700,.6,.05,[.18,320],true);              // a stronger wind
   if(WINTER){
     bed('lowpass',420,.5,.07,[.06,260],true);                      // wind that rises and falls
     bed('bandpass',1500,4,.012,[.09,.01]);                          // a thin whistle in it
@@ -781,11 +791,14 @@ const order=WINTER?shuf(['ibex','partridge','yak']).concat(shuf(['fox','cub'])):
 // each villager's limits shift by up to a fifth either way every time you play, rounded to prices you can actually set
 const RF={};Object.keys(CAST).forEach(k=>RF[k]=.8+Math.random()*.4);
 const nice=v=>Math.min(2000,v<200?Math.max(10,Math.floor(v/10)*10):Math.floor(v/50)*50);
-const LM=(k,b)=>nice(b*RF[k]),RS=n=>'₹'+n.toLocaleString('en-IN');
-let D1={},D2={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{};D2=JSON.parse(localStorage.getItem('md-d2')||'{}')||{}}catch(e){}
+const LM=(k,b)=>nice(b*RF[k]*(WF[k]||1)),RS=n=>'₹'+n.toLocaleString('en-IN');
+let VISITOR=null,D1={},D2={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{};D2=JSON.parse(localStorage.getItem('md-d2')||'{}')||{}}catch(e){}
 let BEST_DAY=0;   // worked out after everything is set up, by trying every sensible way to play the day
 function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k],C=cost;
   const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:C(k),think,why,note}),no=(think,why,note)=>({think,why,note});
+  if(key===VISITOR){const w=LM(key,250),from=DAYNAME[HOME[key]],nm=CAST[key].name,why='Surprise visitor';let pk=null;Object.keys(ITEMS).forEach(k=>{if(C(k)<=w&&(!pk||C(k)>C(pk)))pk=k});
+    if(pk)return yes(pk,`I wandered over from ${from}. Oh, I’ll take this!`,why,`${nm} wandered over from ${from} with ${RS(w)} to spend, and picked the priciest thing that fitted.`);
+    return no(`I wandered over from ${from}… but it’s all a bit dear for me.`,why,`${nm} had ${RS(w)} to spend, and nothing was priced that low.`)}
   const back=DAY===2?' Win him on Day 1 and he comes back loyal.':'',T=WINTER?null:TRIO,U=T&&T.unit,PS=PAIR.small,PB=PAIR.big;
   if(WINTER){
     if(key==='ibex'){const b=C('bundle'),sep=C('chai')+C('walnuts'),bl=LM('ibex',250),cl=LM('ibex',40),why='Bundling';
@@ -859,7 +872,7 @@ const snap=()=>({p:Object.assign({},PRICE),sign,tray,charm,bundle,log});
 function unsnap(k){Object.keys(PRICE).forEach(x=>delete PRICE[x]);Object.assign(PRICE,k.p);sign=k.sign;tray=k.tray;charm=k.charm;bundle=k.bundle;log=k.log}
 function* bestGen(){const u=a=>[...new Set(a.map(v=>Math.min(2000,Math.max(10,v))))],B=[false,true];let best=0,n=0;
   const run=(p,s1,s2,t1,t2,ch,b1,b2)=>{Object.assign(PRICE,p);charm=ch;log=[];let tot=0;
-    order.forEach((k,i)=>{const am=i<3;sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
+    order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
     return tot-(FEST?40*((t1?1:0)+(t2?1:0)):0)};
   if(WINTER){const sh=u([LM('fox',900),LM('fox',1800),1000,2000]),cp=u([LM('yak',250),LM('yak',450),LM('yak',500),2000].concat(sh.map(x=>Math.floor(x*.03)*10)));
     for(const chai of u([LM('ibex',40),2000]))for(const honey of u([LM('cub',180),LM('cub',300)]))for(const socks of u([LM('partridge',150),LM('partridge',300),2000]))for(const shawl of sh)for(const cap of cp)
@@ -894,7 +907,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
   const cast=order.map(villager);let i=0;
   // lunchtime: one chance to change things for the afternoon shoppers
   function lunch(){lunched=true;paused=true;sfx('bell');h=13;m=0;clock(h,m);open=false;
-    const sold=log.filter(l=>l.buy).length,aft=order.slice(3).map(k=>CAST[k].name).join(' and ');
+    const sold=log.filter(l=>l.buy).length,aft=order.slice(3).filter(k=>k!==VISITOR).map(k=>CAST[k].name).join(' and ');
     talk('Riya','#800020','#fff8ea','Lunch break! '+sold+' of 3 bought this morning. '+aft+' come by this afternoon. '+(FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
       {t:DAY>1?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',FEST?'Tap the chalkboard or the tasting tray to change them, then head back.':WINTER?'Tap the chalkboard or the bundle basket to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
       {t:'Keep it',soft:true,fn:resume}])}
@@ -928,20 +941,21 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
     (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>Books for village children</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
+  const wxNote={rain:' · Rain',blizzard:' · Blizzard'}[WEATHER]||'';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
-  $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
+  $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+wxNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
   $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>reboot()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
-  const n=sold.length;
+  const n=sold.length,N=order.length,vis=log.find(l=>l.key===VISITOR),main=money-(vis&&vis.buy?vis.n:0);
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
   const ns=newStk.map(k=>STICKERS.find(x=>x.k===k).t),gifts=newGifts.map(k=>CAST[k].name+' gave you '+GIFTS[k]);
-  $('#sum').textContent=(gifts.length?gifts.join(', ')+'! ':'')+(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
-    :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
-    :WINTER?n+' of 5 villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
-    :DAY===2?n+' of 5 villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
-    :n+' of 5 villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
-    (money>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
-  hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===5?'perfect':'dusk')},400)}
+  $('#sum').textContent=(gifts.length?gifts.join(', ')+'! ':'')+(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(main>=BEST_DAY?'Everyone bought, at the most they’d pay. The best day there is!'
+    :n===N?'All '+N+' villagers bought something today. Could they have paid a little more?'
+    :WINTER?n+' of '+N+' villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
+    :DAY===2?n+' of '+N+' villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
+    :n+' of '+N+' villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
+    (vis?' '+CAST[VISITOR].name+' dropped in from '+DAYNAME[HOME[VISITOR]]+' too.':'')+(main>=BEST_DAY?'':' Your best: ₹'+best.toLocaleString('en-IN')+'. The best possible day takes ₹'+BEST_DAY.toLocaleString('en-IN')+'.');
+  hush();setTimeout(()=>{$('#ledger').classList.add('on');sfx(n===N?'perfect':'dusk')},400)}
 
 /* ---------- the sticker book: one sticker for each nudge you get to work ---------- */
 const STICKERS=[
@@ -959,7 +973,7 @@ const STICKERS=[
   {k:'Framing',t:'Worth it over time',d:'A big price feels small spread over years',who:'fox',day:3}];
 let STK=[],newStk=[];try{STK=JSON.parse(localStorage.getItem('md-stickers')||'[]')||[]}catch(e){}
 // which nudge, if any, made this sale happen
-function stickerFor(key,d){if(!d.buy)return null;const s=sign;
+function stickerFor(key,d){if(!d.buy||key===VISITOR)return null;const s=sign;
   if(key==='goat'){if(DAY===2&&D1.goat)return 'Loyalty';return d.buy===ITEMS.medium.name&&PRICE.large>=2*PRICE.medium?'The decoy effect':null}
   if(key==='monal')return s===1?'Scarcity':null;
   if(key==='pika')return 'Social proof';
@@ -998,6 +1012,8 @@ drawStkPill();
 /* ---------- friendship: a heart for every happy sale, and a gift at five ---------- */
 let HEARTS={};try{HEARTS=JSON.parse(localStorage.getItem('md-hearts')||'{}')||{}}catch(e){}
 const newGifts=[],HOME={goat:1,monal:1,pika:1,yak:1,panda:1,marmot:2,cub:2,bear:2,ibex:3,partridge:3,fox:3};
+// about half the time, someone from another day wanders in at the end
+VISITOR=Math.random()<.5?pickOne(Object.keys(HOME).filter(k=>!order.includes(k))):null;if(VISITOR)order.push(VISITOR);
 const GIFTS={goat:'a brass bell',monal:'a feather fan',pika:'a pot of wildflowers',yak:'a woven rug',panda:'a paper lantern',marmot:'a sunflower',cub:'a string of stars',bear:'a carved wooden plaque',ibex:'a wind chime',partridge:'a little birdhouse',fox:'knitted bunting'};
 const heartsOf=k=>Math.min(5,HEARTS[k]||0),heartStr=k=>'♥'.repeat(heartsOf(k))+'♡'.repeat(5-heartsOf(k));
 function star(p,x,y,r,c){let d='';for(let k=0;k<10;k++){const a=k*Math.PI/5-Math.PI/2,rr=k%2?r*.45:r;d+=(k?'L':'M')+(x+Math.cos(a)*rr).toFixed(1)+' '+(y+Math.sin(a)*rr).toFixed(1)}el('path',{d:d+'Z',fill:c,class:'ol',"stroke-width":1.5},p)}
@@ -1055,7 +1071,7 @@ function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('v
   el('path',{d:'M600 70 V600',stroke:'#d9c4a5',"stroke-width":3},b);
   // the note, in the shopkeeper's words
   const msg=['Dear friend,'].concat(wrapText(`Today I minded ${(ME.name.trim()||'The Hill Stall')} at the ${DAYNAME[DAY].toLowerCase()}.`,30),
-    wrapText(`${sold.length} of 5 villagers bought from me, and I took ₹${money.toLocaleString('en-IN')}.`,30),
+    wrapText(`${sold.length} of ${order.length} villagers bought from me, and I took ₹${money.toLocaleString('en-IN')}.`,30),
     best?wrapText(`What worked best: ${PLAIN[best.why]||best.why.toLowerCase()}.`,30):['Nobody bought today. Tomorrow!'],
     ['','Come and see if you can beat me!']);
   msg.forEach((t,i)=>{el('text',{x:56,y:112+i*46,style:`font:${i?400:600} 29px Fredoka,sans-serif;fill:#5b3a2e`},b).textContent=t});
@@ -1113,11 +1129,11 @@ startBest();
 function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()},mk={t:'Make it yours',soft:true,fn:showMe};
   const other=[1,2,3].filter(d=>d!==DAY&&unlocked(d));
   const days=other.length?{t:'Other days',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Which market day?',other.map(d=>({t:DAYNAME[d]+' →',fn:()=>toDay(d)})).concat([{t:'Stay here',soft:true,fn:morning}]))}:null;
-  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
-  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
+  if(WINTER)return talk('Riya','#800020','#fff8ea',WXL+'Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
+  if(DAY===2)return talk('Riya','#800020','#fff8ea',WXL+'Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
   const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
   b.push(mk);if(days)b.push(days);
-  talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding the stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
+  talk('Riya','#800020','#fff8ea',WXL+'Morning! The hill market opens at nine and you’re minding the stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
 setTimeout(()=>{scrollTo(focus());morning()},500);
 addEventListener('resize',()=>scrollTo(focus(),true),SIG);
 // how to put this day away before the next one is built
