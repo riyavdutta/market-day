@@ -199,7 +199,10 @@ em.hts{font-style:normal;font-size:13px;margin-left:6px}
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
 
 <script>
-(function(){
+// the whole game is built by boot(); switching days rebuilds it in place, so sound can carry straight on
+let __teardown=null;
+function boot(warm){
+const CTRL=new AbortController(),SIG={signal:CTRL.signal};let alive=true;
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Day 1 is the first market; #day2 is Festival day, with new villagers and new tools
@@ -527,7 +530,7 @@ function showMe(){if(started)return;hush();if(narrow())scrollTo(sx+220);$('#mena
       b.onclick=()=>{ME[key]=val;saveMe();drawMe();sfx('tap');r.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))};r.appendChild(b)});box.appendChild(r)};
   row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('In the hair','hairacc',LOOK.hairacc,false);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Pattern','pattern',LOOK.pattern,false);row('Earrings','ears',LOOK.ears,false);row('Face','face',LOOK.face,false);
   $('#mepanel').classList.add('on');sfx('clink')}
-$('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()});
+$('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()},SIG);
 $('#medone').onclick=()=>{sfx('tap');$('#mepanel').classList.remove('on');scrollTo(focus());morning()};
 
 /* ---------- the villagers: an original cast from the Himalaya ---------- */
@@ -670,7 +673,7 @@ if(WINTER){el('circle',{cx:1440,cy:332,r:26,fill:'#ffcf5a',class:'glowl',style:'
 let AC=null,master=null,muted=false,armed=false;
 try{muted=localStorage.getItem('md-muted')==='1'}catch(e){}
 // browsers only allow sound after the first tap or key press
-const arm=()=>{armed=true;setTimeout(startAmbience,50)};addEventListener('pointerdown',arm,{once:true});addEventListener('keydown',arm,{once:true});
+const arm=()=>{armed=true;setTimeout(startAmbience,50)};addEventListener('pointerdown',arm,{once:true,signal:CTRL.signal});addEventListener('keydown',arm,{once:true,signal:CTRL.signal});
 function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.55;master.connect(AC.destination)}
   if(AC.state==='suspended')AC.resume();return AC}
 function tone(f,t0,dur,o={}){const a=ac();if(!a)return;const t=a.currentTime+t0,osc=a.createOscillator(),gn=a.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(f,t);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,t+dur);
@@ -734,7 +737,7 @@ function startAmbience(){if(amb||muted||!armed||document.hidden)return;const a=a
 function stopAmbience(){if(!amb)return;const a=AC,m=amb;amb=null;m.timers.forEach(clearTimeout);try{m.out.gain.cancelScheduledValues(a.currentTime);m.out.gain.setValueAtTime(m.out.gain.value,a.currentTime);m.out.gain.linearRampToValueAtTime(0,a.currentTime+.5)}catch(e){}
   setTimeout(()=>{m.src.forEach(x=>{try{x.stop()}catch(e){}});m.out.disconnect()},700)}
 // quiet when the tab is in the background
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAmbience();else startAmbience()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAmbience();else startAmbience()},SIG);
 function steps(ms){if(reduce||muted)return;let n=0;const t=setInterval(()=>{sfx('step');if((n+=320)>=ms)clearInterval(t)},320)}
 // every speaker has their own babble: a pitch, a tone colour, and a little character
 const VOX={
@@ -754,7 +757,7 @@ const VOW={a:800,e:1700,i:2300,o:560,u:420,y:2000};
 const sndBtn=$('#snd');
 function drawSnd(){sndBtn.setAttribute('aria-pressed',String(!muted));$('#sndtx').textContent=muted?'Off':'On'}
 drawSnd();
-sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap');if(muted)stopAmbience();else startAmbience()});
+sndBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('md-muted',muted?'1':'0')}catch(e){}drawSnd();armed=true;sfx('tap');if(muted)stopAmbience();else startAmbience()},SIG);
 
 /* ---------- the HUD and talk ---------- */
 const talkEl=$('#talk'),sayEl=$('#say'),acts=$('#acts'),who=$('#who');let typing=null;
@@ -871,7 +874,7 @@ function* bestGen(){const u=a=>[...new Set(a.map(v=>Math.min(2000,Math.max(10,v)
 let bestIt=null,bestDone=false;
 function bestSlice(ms){if(bestDone)return;const k=snap();let r;try{const t=performance.now();do{r=bestIt.next()}while(!r.done&&performance.now()-t<ms)}finally{unsnap(k)}
   if(r.done){BEST_DAY=r.value;bestDone=true}}
-function startBest(){bestIt=bestGen();const tick=()=>{bestSlice(10);if(!bestDone)setTimeout(tick,40)};setTimeout(tick,1200)}
+function startBest(){bestIt=bestGen();const tick=()=>{if(!alive)return;bestSlice(10);if(!bestDone)setTimeout(tick,40)};setTimeout(tick,1200)}
 function finishBest(){if(!bestDone&&bestIt)bestSlice(1e9)}
 const step=v=>v<200?10:50;
 function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.innerHTML='';
@@ -911,7 +914,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
 const narrow=()=>$('#stage').clientWidth<W.getBoundingClientRect().width*.45;
 const focus=()=>!open&&narrow()?bx+60:sx;
 function scrollTo(x,now){const stg=$('#stage'),sc=W.getBoundingClientRect().width/1600;stg.scrollTo({left:x*sc-stg.clientWidth/2,behavior:reduce||now?'auto':'smooth'})}
-const toDay=d=>{if(d>1)location.hash='day'+d;else history.replaceState(null,'',location.pathname+location.search);location.reload()};
+const toDay=d=>{history.replaceState(null,'',location.pathname+location.search+(d>1?'#day'+d:''));reboot()};
 // every day is open from the start; earlier days only matter for who comes back loyal
 const unlocked=d=>d>=1&&d<=3;
 
@@ -927,7 +930,7 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
+  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>reboot()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
@@ -1116,8 +1119,17 @@ function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()},mk={t
   b.push(mk);if(days)b.push(days);
   talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding the stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
 setTimeout(()=>{scrollTo(focus());morning()},500);
-addEventListener('resize',()=>scrollTo(focus(),true));
-})();
+addEventListener('resize',()=>scrollTo(focus(),true),SIG);
+// how to put this day away before the next one is built
+__teardown=()=>{alive=false;CTRL.abort();clearInterval(typing);clearTimeout(tt);try{stopAmbience()}catch(e){}const old=AC;setTimeout(()=>{try{old&&old.close()}catch(e){}},900)};
+// arriving from another day: you already tapped, so the day's sounds start straight away
+if(warm){armed=true;startAmbience()}
+}
+function reboot(){if(__teardown)__teardown();document.getElementById('w').innerHTML='';
+  ['ledger','post','stk','prices','mepanel','toast'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.documentElement.style.setProperty('--dusk',0);document.getElementById('money').textContent='0';document.querySelector('.pill.title b').textContent='Market Day';document.title='Market Day';
+  boot(true)}
+boot(false);
 </script>
 </body>
 </html>
