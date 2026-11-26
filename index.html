@@ -257,9 +257,12 @@ if(FEST){
 el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312 L1600 1000 L0 1000Z',fill:'url(#lawn)'});
 el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312',fill:'none',stroke:WINTER?'#c3d2df':FEST?'#8c9a40':'#4f8f3f',"stroke-width":10});
 const riverD='M1250 310 C 1300 420, 1180 520, 1260 640 S 1420 820, 1380 1010';
-el('path',{d:riverD,fill:'none',stroke:WINTER?'#8cc0da':'#4aa9cf',"stroke-width":140,"stroke-linecap":'round'});
-el('path',{d:riverD,fill:'none',stroke:WINTER?'#cde9f5':'#7fd6f2',"stroke-width":118,"stroke-linecap":'round'});
-el('path',{d:riverD,class:'shimmer'});el('path',{d:'M1225 310 C 1275 420, 1155 520, 1235 640 S 1395 820, 1355 1010',class:'shimmer',style:'animation-delay:-1.4s'});
+const rcp=el('clipPath',{id:'riverclip'},defs);el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312 L1600 1000 L0 1000Z'},rcp);
+const rv=g({'clip-path':'url(#riverclip)'});
+el('path',{d:riverD,fill:'none',stroke:WINTER?'#8cc0da':'#4aa9cf',"stroke-width":140,"stroke-linecap":'round'},rv);
+el('path',{d:riverD,fill:'none',stroke:WINTER?'#cde9f5':'#7fd6f2',"stroke-width":118,"stroke-linecap":'round'},rv);
+el('path',{d:riverD,class:'shimmer'},rv);el('path',{d:'M1225 310 C 1275 420, 1155 520, 1235 640 S 1395 820, 1355 1010',class:'shimmer',style:'animation-delay:-1.4s'},rv);
+el('path',{d:'M0 318 C 300 300, 700 330, 1000 310 S 1400 320, 1600 312',fill:'none',stroke:WINTER?'#c3d2df':FEST?'#8c9a40':'#4f8f3f',"stroke-width":10});
 [[1290,720],[1230,560],[1350,880]].forEach(([x,y])=>{if(WINTER){el('path',{d:`M${x-30} ${y} l14 -12 h30 l12 10 l-16 10 h-28 z`,fill:'#fff',class:'ol',"stroke-width":3});return}el('ellipse',{cx:x,cy:y,rx:18,ry:9,fill:'#5fbf6a',class:'ol'});el('circle',{cx:x+6,cy:y-4,r:4,fill:'#ff7aa2'})});
 // the bridge, with rails
 const br=g({});el('rect',{x:1150,y:640,width:230,height:70,rx:10,fill:'url(#planks)',class:'ol'},br);
@@ -284,7 +287,7 @@ function tree(x,y,s,fruit){const au=AUT[Math.round(x/10)%3];sh(x,y+4,62*s);const
 function rhodo(x,y,s){sh(x,y+6,46*s);if(WINTER){el('path',{d:`M${x-64*s} ${y+4} q10 -44 46 -40 q20 -26 50 -6 q30 -6 32 46 z`,fill:'#f8fafc',class:'ol'});return}const b=g({class:'sway',style:'animation-delay:-1s'});[[-26,-20,30],[22,-22,30],[0,-40,32]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx*s,cy:y+dy*s,r:r*s,fill:'#4fa850',class:'ol'},b));
   for(let k=0;k<7;k++){const a=k*0.9,fx=x+Math.cos(a)*30*s,fy=y-28*s+Math.sin(a)*18*s;el('circle',{cx:fx,cy:fy,r:9*s,fill:FEST?(k%2?'#ff7a1a':'#ffb300'):k%2?'#e8336d':'#ff6b8a',class:'ol',"stroke-width":2.5},b)}}
 function patch(x,y){const p=g({});for(let k=0;k<6;k++){const fx=x+(k%3)*22,fy=y+Math.floor(k/3)*18,c=FUN[(k+x)%FUN.length];for(let q=0;q<5;q++)el('circle',{cx:fx+Math.cos(q*1.256)*6,cy:fy+Math.sin(q*1.256)*6,r:5,fill:c},p);el('circle',{cx:fx,cy:fy,r:3.4,fill:'#fff3a0'},p)}}
-tree(130,560,1,'#e8336d');tree(330,470,.85,'#e8336d');tree(1500,520,1,'#ffb23f');tree(1050,430,.8);tree(560,420,.7);
+tree(130,560,1,'#e8336d');tree(330,470,.85,'#e8336d');tree(1570,565,.85,'#ffb23f');tree(1050,430,.8);tree(560,420,.7);
 rhodo(470,610,1);rhodo(1520,860,1.1);rhodo(80,920,1);rhodo(980,560,.8);
 if(!WINTER)[[230,880],[620,900],[860,880],[1080,880],[300,650],[1500,700],[700,560]].filter(([x])=>!(FEST&&(x===860||x===1080))).forEach(a=>patch(...a));
 // winter: a snowman keeps watch
@@ -306,7 +309,7 @@ if(FEST){
   const ap=el('path',{d:'M40 600 Q155 520 270 600',fill:'none',stroke:'#a86b43',"stroke-width":14,"stroke-linecap":'round'},ar),aL=ap.getTotalLength();
   for(let i=0;i<=18;i++){const q=ap.getPointAtLength(aL*i/18);el('circle',{cx:q.x,cy:q.y+4,r:9,fill:FUN[i%FUN.length],class:'ol',"stroke-width":2},ar)}
   [70,110,200,240].forEach(x=>{for(let k=0;k<4;k++)el('circle',{cx:x,cy:600+(x<155?(155-x):(x-155))*-.35+38+k*17,r:7,fill:FUN[(k+x)%FUN.length],class:'ol',"stroke-width":1.5},ar)});
-  el('rect',{x:80,y:510,width:150,height:40,rx:20,fill:'#800020',class:'ol'},ar);el('text',{x:155,y:537,"text-anchor":'middle',style:'font:700 21px Fredoka,sans-serif;fill:#fff8ea'},ar).textContent='Hill Festival';
+  el('rect',{x:66,y:510,width:178,height:40,rx:20,fill:'#800020',class:'ol'},ar);el('text',{x:155,y:537,"text-anchor":'middle',style:'font:700 21px Fredoka,sans-serif;fill:#fff8ea'},ar).textContent='Hill Festival';
   // a rangoli on the grass
   const rg=g({transform:'translate(985 885) scale(1 .42)'});
   for(let k=0;k<12;k++){const a=k*Math.PI/6,x=Math.cos(a)*64,y=Math.sin(a)*64;el('ellipse',{cx:x,cy:y,rx:24,ry:12,transform:`rotate(${k*30} ${x} ${y})`,fill:k%2?'#d02b8f':'#ff7a1a',class:'ol',"stroke-width":3},rg)}
@@ -396,7 +399,7 @@ if(FEST)[[sx-215,-1],[sx+215,1]].forEach(([x,d])=>{const bl=g({class:'bob',style
 // winter: snow on the awning and the counter, and icicles
 if(WINTER){let d=`M${sx-238} ${sy-216}`;for(let k=0;k<12;k++)d+=' q19.8 -18 39.6 0';el('path',{d:d+' v8 h-475 z',fill:'#fff',class:'ol',"stroke-width":3},S);
   for(let k=0;k<10;k++)el('path',{d:`M${sx-198+k*43} ${sy-143} l4 16 l4 -16 z`,fill:'#e2f4ff',class:'ol',"stroke-width":1.5},S);
-  let c=`M${sx-232} ${sy-38}`;for(let k=0;k<8;k++)c+=' q29 -12 58 0';el('path',{d:c+' z',fill:'#fff',class:'ol',"stroke-width":2.5},S)}
+  let c=`M${sx-232} ${sy-38}`;for(let k=0;k<8;k++)c+=' q29 -12 58 0';el('path',{d:c+' z',fill:'#fff',class:'ol',"stroke-width":2.5},S);S.appendChild(ban)}
 // festival day: a string of fairy lights along the awning
 if(DAY===2)for(let k=0;k<=22;k++){const x=sx-232+k*21.1,y=sy-212+Math.sin(k/22*Math.PI)*16;el('circle',{cx:x,cy:y,r:8,fill:FUN[k%FUN.length],class:'ol',"stroke-width":2},S)}
 // coin jar
@@ -454,15 +457,15 @@ TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key
 /* ---------- the shopkeeper: you, drawn from the choices you make ---------- */
 const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a','#5a1a2a'],style:['long','bob','curly','braid','bun'],
   top:['dress','kurta','lehenga','pattu'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c','#e8336d','#e3a92b'],pattern:['plain','dots','stripes','flowers'],
-  apron:['cream','yellow','pink','none'],hairacc:['flower','bow','band','none'],ears:['none','jhumkas','hoops'],face:['none','bindi','glasses','both']};
+hairacc:['flower','bow','band','none'],ears:['none','jhumkas','hoops'],face:['none','bindi','glasses','both']};
 const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',braid:'Side braid',bun:'High bun'},top:{dress:'Dress',kurta:'Kurta & dupatta',lehenga:'Lehenga',pattu:'Pattu'},
-  pattern:{plain:'Plain',dots:'Dots',stripes:'Stripes',flowers:'Flowers'},apron:{cream:'Cream',yellow:'Yellow',pink:'Pink',none:'No apron'},
+  pattern:{plain:'Plain',dots:'Dots',stripes:'Stripes',flowers:'Flowers'},
   hairacc:{flower:'Flower clip',bow:'Ribbon bow',band:'Hairband',none:'Nothing'},ears:{none:'None',jhumkas:'Jhumkas',hoops:'Hoops'},face:{none:'None',bindi:'Bindi',glasses:'Glasses',both:'Bindi & glasses'}};
-const MEDEF={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,top:'dress',pattern:'plain',apron:'cream',hairacc:'flower',ears:'none',face:'none'};
+const MEDEF={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,top:'dress',pattern:'plain',hairacc:'flower',ears:'none',face:'none'};
 let ME=Object.assign({},MEDEF);
 try{Object.assign(ME,JSON.parse(localStorage.getItem('md-me')||'{}'))}catch(e){}
 // anything saved from an older version that's no longer offered goes back to the default
-['style','top','pattern','apron','hairacc','ears','face'].forEach(k=>{if(!LOOK[k].includes(ME[k]))ME[k]=MEDEF[k]});['skin','hair','outfit'].forEach(k=>{if(!(ME[k]>=0&&ME[k]<LOOK[k].length))ME[k]=MEDEF[k]});
+['style','top','pattern','hairacc','ears','face'].forEach(k=>{if(!LOOK[k].includes(ME[k]))ME[k]=MEDEF[k]});['skin','hair','outfit'].forEach(k=>{if(!(ME[k]>=0&&ME[k]<LOOK[k].length))ME[k]=MEDEF[k]});
 let clipN=0;
 function keeper(i,m){const SKIN=LOOK.skin[m.skin],HAIR=LOOK.hair[m.hair],OUT=LOOK.outfit[m.outfit],top=m.top,GOLD='#e3bd00';
   // hair that falls behind the shoulders
@@ -483,8 +486,6 @@ function keeper(i,m){const SKIN=LOOK.skin[m.skin],HAIR=LOOK.hair[m.hair],OUT=LOO
   // trims that make each outfit what it is
   if(top==='lehenga'){el('path',{d:'M-24 -68 H 24',stroke:GOLD,"stroke-width":5},i);el('path',{d:'M-45 -6 H 45',stroke:GOLD,"stroke-width":6},i);for(let x=-38;x<=38;x+=12)el('circle',{cx:x,cy:-13,r:2.5,fill:GOLD},i)}
   if(top==='pattu'){el('path',{d:'M-30 -40 H 30',stroke:GOLD,"stroke-width":7},i);el('path',{d:'M-29 -40 l6 -6 l6 6 l6 -6 l6 6 l6 -6 l6 6 l6 -6 l6 6 l5 -5',fill:'none',stroke:'#2f5bff',"stroke-width":2.5},i);el('circle',{cx:-17,cy:-86,r:6,fill:'#d9d9e3',class:'ol',"stroke-width":2},i);el('circle',{cx:17,cy:-86,r:6,fill:'#d9d9e3',class:'ol',"stroke-width":2},i)}
-  // a cream, yellow or pink stall apron with a pocket, or none
-  if(m.apron!=='none'){const AP={cream:'#fff8ea',yellow:'#ffe08a',pink:'#ffc2d1'}[m.apron];el('path',{d:'M-18 -82 h36 l5 50 h-46 z',fill:AP,class:'ol',"stroke-width":3},i);el('rect',{x:-9,y:-62,width:18,height:12,rx:3,fill:m.apron==='yellow'?'#ff9f43':'#ffd34d',class:'ol',"stroke-width":2.5},i)}
   el('path',{d:'M-18 -92 q18 14 36 0',stroke:'#ffd34d',"stroke-width":8,fill:'none',"stroke-linecap":'round'},i);
   // a dupatta over the shoulders goes with the kurta
   if(top==='kurta'){const DU=m.outfit===6?'#ff6b8a':'#ffd34d';el('path',{d:'M-28 -94 Q -2 -78 26 -50',fill:'none',stroke:'#5b3a2e',"stroke-width":13,"stroke-linecap":'round'},i);el('path',{d:'M-28 -94 Q -2 -78 26 -50',fill:'none',stroke:DU,"stroke-width":9,"stroke-linecap":'round'},i);el('path',{d:'M26 -50 l4 18',stroke:DU,"stroke-width":8,"stroke-linecap":'round'},i)}
@@ -520,7 +521,7 @@ function showMe(){if(started)return;hush();if(narrow())scrollTo(sx+220);$('#mena
     vals.forEach((v,ix)=>{const b=document.createElement('button');b.type='button';const val=isColour?ix:v;b.setAttribute('aria-pressed',String(ME[key]===val));
       if(isColour){b.className='sw';b.style.background=v;b.setAttribute('aria-label',label+' '+(ix+1))}else{b.className='chip';b.textContent=LOOKNAME[key][v]}
       b.onclick=()=>{ME[key]=val;saveMe();drawMe();sfx('tap');r.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))};r.appendChild(b)});box.appendChild(r)};
-  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('In the hair','hairacc',LOOK.hairacc,false);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Pattern','pattern',LOOK.pattern,false);row('Apron','apron',LOOK.apron,false);row('Earrings','ears',LOOK.ears,false);row('Face','face',LOOK.face,false);
+  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('In the hair','hairacc',LOOK.hairacc,false);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Pattern','pattern',LOOK.pattern,false);row('Earrings','ears',LOOK.ears,false);row('Face','face',LOOK.face,false);
   $('#mepanel').classList.add('on');sfx('clink')}
 $('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()});
 $('#medone').onclick=()=>{sfx('tap');$('#mepanel').classList.remove('on');scrollTo(focus());morning()};
