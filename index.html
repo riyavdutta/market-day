@@ -331,23 +331,48 @@ function good(key,name,short,price,draw,tx){const it=g({class:'goods',tabindex:0
   ITEMS[key]={name,short,it,lbl};setPrice(key,price,true)}
 function setPrice(k,v,quiet){PRICE[k]=v;if(ITEMS[k]){ITEMS[k].lbl.textContent='₹'+cost(k);ITEMS[k].it.setAttribute('aria-label',ITEMS[k].name+', ₹'+cost(k))}else if(k==='bundle')drawBundle();
   if(!quiet)try{localStorage.setItem(KP+'prices',JSON.stringify(PRICE))}catch(e){}}
-function jar(p,x,h,w){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
+// every day the stall is stocked a little differently: each slot picks one of a few things that work the same way
+const pickOne=a=>a[Math.floor(Math.random()*a.length)],cap1=t=>t.charAt(0).toUpperCase()+t.slice(1);
+function jar(p,x,h,w,body,lid){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:w*.3,fill:body||'#f2a91c',class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:14,rx:5,fill:lid||'#d02b8f',class:'ol',"stroke-width":3},p);el('rect',{x:x-w/4,y:sy-38-h*.7,width:w/2,height:h*.35,rx:4,fill:'#fff8ea'},p);el('circle',{cx:x-w*.22,cy:sy-30-h*.85,r:3.5,fill:'#fff',opacity:.8},p)}
+function tin(p,x,h,w,body,lid){el('rect',{x:x-w/2,y:sy-38-h,width:w,height:h,rx:5,fill:body,class:'ol'},p);el('rect',{x:x-w/2-3,y:sy-46-h,width:w+6,height:11,rx:3,fill:lid,class:'ol',"stroke-width":3},p);el('rect',{x:x-w/2+5,y:sy-38-h*.68,width:w-10,height:h*.34,rx:3,fill:'#fff8ea'},p);el('circle',{cx:x,cy:sy-38-h*.51,r:Math.min(w,h)*.11,fill:lid},p)}
+function crate(p,c){el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy],i)=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:c[i%2],class:'ol',"stroke-width":3},p))}
+function mitten(p,x,y,c){el('path',{d:`M${x} ${y} v-34 q0 -14 14 -14 q14 0 14 14 v8 q9 -7 13 1 q3 8 -7 13 v12 z`,fill:c,class:'ol',"stroke-width":3},p);el('rect',{x:x-2,y:y-10,width:32,height:12,rx:4,fill:'#fff8ea',class:'ol',"stroke-width":2.5},p)}
+const DRAW={
+  cap:(p,x)=>{el('path',{d:`M${x-44} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:x-46,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:x-40+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},
+  cushion:(p,x)=>{el('rect',{x:x-34,y:sy-94,width:68,height:54,rx:12,fill:'#d02b8f',class:'ol'},p);el('circle',{cx:x,cy:sy-67,r:13,fill:'#ffd34d',class:'ol',"stroke-width":2.5},p);for(let k=0;k<6;k++){const a=k*Math.PI/3;el('circle',{cx:x+Math.cos(a)*21,cy:sy-67+Math.sin(a)*15,r:4,fill:'#fff8ea'},p)}[[-34,-94],[34,-94],[-34,-40],[34,-40]].forEach(([dx,dy])=>el('circle',{cx:x+dx,cy:sy+dy,r:5,fill:'#ffd34d',class:'ol',"stroke-width":2},p))},
+  mittens:(p,x)=>{mitten(p,x-34,sy-40,'#00a9bd');mitten(p,x+4,sy-40,'#d02b8f')},
+  shawl:(p,x)=>{el('path',{d:`M${x-28} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:x-22,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},
+  rug:(p,x)=>{el('rect',{x:x-28,y:sy-112,width:56,height:72,rx:4,fill:'#c0392b',class:'ol'},p);el('path',{d:`M${x-22} ${sy-96} l11 10 l11 -10 l11 10 l11 -10 M${x-22} ${sy-72} l11 10 l11 -10 l11 10 l11 -10`,fill:'none',stroke:'#ffd34d',"stroke-width":4},p);el('rect',{x:x-20,y:sy-84,width:40,height:6,fill:'#2f5bff'},p);for(let k=0;k<7;k++)el('path',{d:`M${x-24+k*8} ${sy-40} v8`,stroke:'#5b3a2e',"stroke-width":2},p)},
+  pashmina:(p,x)=>{el('path',{d:`M${x-30} ${sy-40} q4 -40 8 -70 h44 q4 30 8 70 z`,fill:'#f6c1d0',class:'ol'},p);[[-12,-96],[8,-84],[-6,-66],[12,-56]].forEach(([dx,dy])=>{el('path',{d:`M${x+dx} ${sy+dy} q6 -8 10 0 q-4 8 -10 0 z`,fill:'#7a3cff'},p)});for(let k=0;k<7;k++)el('path',{d:`M${x-24+k*8} ${sy-40} v8`,stroke:'#5b3a2e',"stroke-width":2},p)}};
+const TRIO=pickOne([{word:'honey',unit:'jar',name:z=>`${z} jar of mountain honey`,short:z=>`${z} honey`,draw:(p,x,h,w)=>jar(p,x,h,w)},
+  {word:'jam',unit:'jar',name:z=>`${z} jar of apricot jam`,short:z=>`${z} jam`,draw:(p,x,h,w)=>jar(p,x,h,w,'#e8602c','#fff8ea')},
+  {word:'tea',unit:'tin',name:z=>`${z} tin of hill tea`,short:z=>`${z} tea`,draw:(p,x,h,w)=>tin(p,x,h,w,'#2f7a52','#e3bd00')}]);
+const FRUIT=pickOne([{word:'apples',name:'Crate of Himachali apples',short:'Apples',c:['#e8336d','#ff4d6d']},{word:'apricots',name:'Crate of apricots',short:'Apricots',c:['#f08a3c','#ffa53a']},{word:'plums',name:'Crate of plums',short:'Plums',c:['#5b2bbf','#7a3cff']}]);
+const PAIR=pickOne([{small:{name:'Woollen Himachali cap',short:'Woollen cap',a:'a cap',draw:'cap'},big:{name:'Kullu shawl',short:'Kullu shawl',word:'shawl',a:'a Kullu shawl',draw:'shawl'}},
+  {small:{name:'Embroidered cushion',short:'Cushion',a:'a cushion',draw:'cushion'},big:{name:'Hand-woven rug',short:'Woven rug',word:'rug',a:'a hand-woven rug',draw:'rug'}},
+  {small:{name:'Pair of woollen mittens',short:'Mittens',a:'mittens',draw:'mittens'},big:{name:'Pashmina wrap',short:'Pashmina',word:'pashmina',a:'a pashmina wrap',draw:'pashmina'}}]);
+const HOT=pickOne([{word:'chai',name:'Cup of masala chai',short:'Cup of chai',c:'#c97a3a'},{word:'kahwa',name:'Cup of saffron kahwa',short:'Cup of kahwa',c:'#d4a84b'}]);
+const NUTS=pickOne([{word:'walnuts',name:'Bag of walnuts',short:'Walnuts',c:'#a0703c',oval:false},{word:'almonds',name:'Bag of almonds',short:'Almonds',c:'#c98a5a',oval:true}]);
+const SWEET=pickOne([{word:'honey',name:'Jar of mountain honey',short:'Honey',b:'#f2a91c',l:'#d02b8f'},{word:'jam',name:'Jar of apricot jam',short:'Apricot jam',b:'#e8602c',l:'#fff8ea'}]);
+const WARM=pickOne([{word:'socks',name:'Pair of woollen socks',short:'Woollen socks'},{word:'mittens',name:'Pair of woollen mittens',short:'Woollen mittens'}]);
+const BUNDLE_NAME=cap1(HOT.word)+' and '+NUTS.word+' bundle';
 if(!WINTER){
-good('small','Small jar of mountain honey','Small honey',120,p=>jar(p,sx-185,34,30),sx-185,0);
-good('medium','Medium jar of mountain honey','Medium honey',180,p=>jar(p,sx-130,50,40),sx-130,0);
-good('large','Large jar of mountain honey','Big honey',400,p=>jar(p,sx-65,72,52),sx-65,0);
-good('apples','Crate of Himachali apples','Apples',90,p=>{el('rect',{x:sx-12,y:sy-80,width:78,height:44,rx:6,fill:'#c98a5a',class:'ol'},p);[[0,-86],[20,-90],[40,-86],[60,-88],[10,-104],[32,-106],[52,-102]].forEach(([dx,dy])=>el('circle',{cx:sx-6+dx,cy:sy+dy,r:12,fill:dx%20?'#ff4d6d':'#e8336d',class:'ol',"stroke-width":3},p))},sx+27,0);
-good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130,0);
-good('shawl','Kullu shawl','Kullu shawl',900,p=>{el('path',{d:`M${sx+178} ${sy-40} l6 -70 h44 l6 70 z`,fill:'#fff8ea',class:'ol'},p);for(let k=0;k<4;k++)el('rect',{x:sx+184,y:sy-100+k*15,width:44,height:6,fill:['#d02b8f','#00a9bd','#e3bd00','#2f5bff'][k]},p)},sx+206,0);
+good('small',TRIO.name('Small'),TRIO.short('Small'),120,p=>TRIO.draw(p,sx-185,34,30),sx-185);
+good('medium',TRIO.name('Medium'),TRIO.short('Medium'),180,p=>TRIO.draw(p,sx-130,50,40),sx-130);
+good('large',TRIO.name('Large'),TRIO.short('Big'),400,p=>TRIO.draw(p,sx-65,72,52),sx-65);
+good('apples',FRUIT.name,FRUIT.short,90,p=>crate(p,FRUIT.c),sx+27);
+good('cap',PAIR.small.name,PAIR.small.short,350,p=>DRAW[PAIR.small.draw](p,sx+130),sx+130);
+good('shawl',PAIR.big.name,PAIR.big.short,900,p=>DRAW[PAIR.big.draw](p,sx+206),sx+206);
 }else{
-good('chai','Cup of masala chai','Cup of chai',30,p=>{el('path',{d:`M${sx-212} ${sy-40} q-6 -44 26 -46 q32 2 26 46 z`,fill:'#c97a3a',class:'ol'},p);el('path',{d:`M${sx-160} ${sy-66} l18 -14`,stroke:'#c97a3a',"stroke-width":7,"stroke-linecap":'round'},p);
+good('chai',HOT.name,HOT.short,30,p=>{el('path',{d:`M${sx-212} ${sy-40} q-6 -44 26 -46 q32 2 26 46 z`,fill:HOT.c,class:'ol'},p);el('path',{d:`M${sx-160} ${sy-66} l18 -14`,stroke:HOT.c,"stroke-width":7,"stroke-linecap":'round'},p);
   el('rect',{x:sx-198,y:sy-94,width:24,height:9,rx:4,fill:'#a86b43',class:'ol',"stroke-width":2.5},p);el('path',{d:`M${sx-150} ${sy-40} v-18 h18 v18 z`,fill:'#fff8ea',class:'ol',"stroke-width":2.5},p);
   const st=g({class:'steam'},p);for(let k=0;k<3;k++)el('circle',{cx:sx-141,cy:sy-86,r:5},st)},sx-185);
-good('walnuts','Bag of walnuts','Walnuts',150,p=>{el('path',{d:`M${sx-150} ${sy-40} q-4 -40 8 -56 h44 q12 16 8 56 z`,fill:'#d9b77a',class:'ol'},p);el('path',{d:`M${sx-140} ${sy-92} q22 8 44 0`,stroke:'#a86b43',"stroke-width":3,fill:'none'},p);
-  [[-136,-96],[-122,-102],[-108,-96],[-128,-108]].forEach(([dx,dy])=>el('circle',{cx:sx+dx,cy:sy+dy,r:8,fill:'#a0703c',class:'ol',"stroke-width":2},p))},sx-125);
-good('honey','Jar of mountain honey','Honey',180,p=>jar(p,sx-62,58,44),sx-62);
-good('socks','Pair of woollen socks','Woollen socks',200,p=>{[[0,'#d02b8f'],[24,'#00a9bd']].forEach(([dx,c])=>{const x=sx-8+dx;el('path',{d:`M${x} ${sy-104} h18 v44 q0 10 10 10 h8 v16 h-24 q-12 0 -12 -12 z`,fill:c,class:'ol',"stroke-width":3},p);[0,1,2].forEach(k=>el('rect',{x:x+2,y:sy-98+k*12,width:14,height:4,fill:'#fff8ea'},p))})},sx+27);
-good('cap','Woollen Himachali cap','Woollen cap',350,p=>{el('path',{d:`M${sx+86} ${sy-40} q0 -46 44 -46 q44 0 44 46 z`,fill:'#3a3a6e',class:'ol'},p);el('rect',{x:sx+84,y:sy-62,width:92,height:22,rx:6,fill:'#e3bd00',class:'ol',"stroke-width":3},p);for(let k=0;k<5;k++)el('rect',{x:sx+90+k*17,y:sy-58,width:9,height:14,fill:FUN[k],rx:2},p)},sx+130);
+good('walnuts',NUTS.name,NUTS.short,150,p=>{el('path',{d:`M${sx-150} ${sy-40} q-4 -40 8 -56 h44 q12 16 8 56 z`,fill:'#d9b77a',class:'ol'},p);el('path',{d:`M${sx-140} ${sy-92} q22 8 44 0`,stroke:'#a86b43',"stroke-width":3,fill:'none'},p);
+  [[-136,-96],[-122,-102],[-108,-96],[-128,-108]].forEach(([dx,dy],i)=>el('ellipse',{cx:sx+dx,cy:sy+dy,rx:NUTS.oval?10:8,ry:NUTS.oval?6:8,transform:NUTS.oval?`rotate(${i*40-30} ${sx+dx} ${sy+dy})`:'',fill:NUTS.c,class:'ol',"stroke-width":2},p))},sx-125);
+good('honey',SWEET.name,SWEET.short,180,p=>jar(p,sx-62,58,44,SWEET.b,SWEET.l),sx-62);
+good('socks',WARM.name,WARM.short,200,p=>{if(WARM.word==='mittens'){mitten(p,sx-14,sy-40,'#d02b8f');mitten(p,sx+22,sy-40,'#00a9bd');return}
+  [[0,'#d02b8f'],[24,'#00a9bd']].forEach(([dx,c])=>{const x=sx-8+dx;el('path',{d:`M${x} ${sy-104} h18 v44 q0 10 10 10 h8 v16 h-24 q-12 0 -12 -12 z`,fill:c,class:'ol',"stroke-width":3},p);[0,1,2].forEach(k=>el('rect',{x:x+2,y:sy-98+k*12,width:14,height:4,fill:'#fff8ea'},p))})},sx+27);
+good('cap','Woollen Himachali cap','Woollen cap',350,p=>DRAW.cap(p,sx+130),sx+130);
 good('shawl','Thick wool shawl','Thick shawl',1500,p=>{[['#2f7a52',-100,48],['#800020',-80,54],['#5a3d32',-60,60]].forEach(([c,dy,w])=>{el('rect',{x:sx+206-w/2,y:sy+dy,width:w,height:22,rx:7,fill:c,class:'ol',"stroke-width":3},p);el('path',{d:`M${sx+206-w/2+6} ${sy+dy+11} h${w-12}`,stroke:'#ffd34d',"stroke-width":2.5,"stroke-dasharray":'5 4'},p)})},sx+206);
 }
 try{const sv=JSON.parse(localStorage.getItem(KP+'prices')||'null');if(sv)for(const k in sv)if(ITEMS[k]&&sv[k]>0)setPrice(k,+sv[k],true)}catch(e){}
@@ -373,7 +398,7 @@ const SIGNS=[
  {t:['Everyone’s','favourite'],p:'Social proof'},
  {t:['Made in','the hills'],p:'Where it comes from'}];
 if(FEST)SIGNS.push({t:['Last day of','the season!'],p:'Loss aversion'});
-if(WINTER)SIGNS.splice(0,4,{t:['Hot chai,','cold day'],p:'No nudge'},{t:['Shawls that','last 10 winters'],p:'Framing'},{t:['Each sale gives','a child a book'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
+if(WINTER)SIGNS.splice(0,4,{t:['Hot '+HOT.word+',','cold day'],p:'No nudge'},{t:['Shawls that','last 10 winters'],p:'Framing'},{t:['Each sale gives','a child a book'],p:'A good cause'},{t:['Made in','the hills'],p:'Where it comes from'});
 let sign=0;
 const BD=g({class:'board',tabindex:0,role:'button','aria-label':'The chalkboard sign. Tap to change it.'});const bd=g({class:'bd'},BD);
 const bx=430,by=780;sh(bx,by+8,80);
@@ -406,10 +431,10 @@ let bundle=false;const bkOn=g({},TR),bkOff=g({},TR);
 el('rect',{x:trx-26,y:trY-100,width:20,height:24,rx:4,fill:'#fff8ea',class:'ol',"stroke-width":2.5},bkOn);[[8,-84],[22,-88],[15,-96]].forEach(([dx,dy])=>el('circle',{cx:trx+dx,cy:trY+dy,r:7,fill:'#a0703c',class:'ol',"stroke-width":2},bkOn));
 el('rect',{x:trx-62,y:trY-140,width:124,height:28,rx:14,fill:'#ffd34d',class:'ol',"stroke-width":3},bkOn);const bkL=el('text',{x:trx,y:trY-120,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},bkOn);
 const bkTap=g({class:'bob'},bkOff);el('rect',{x:trx-42,y:trY-142,width:84,height:28,rx:14,fill:'#fff8ea',class:'ol',"stroke-width":3},bkTap);el('text',{x:trx,y:trY-122,"text-anchor":'middle',style:'font:700 15px Fredoka,sans-serif;fill:#5b3a2e'},bkTap).textContent='Bundle?';
-function drawBundle(){bkOn.style.display=WINTER&&bundle?'':'none';bkOff.style.display=WINTER&&!bundle?'':'none';if(WINTER)bkL.textContent='Chai + nuts ₹'+cost('bundle')}
+function drawBundle(){bkOn.style.display=WINTER&&bundle?'':'none';bkOff.style.display=WINTER&&!bundle?'':'none';if(WINTER)bkL.textContent='Bundle ₹'+cost('bundle')}
 if(WINTER){PRICE.bundle=160;try{const sv=JSON.parse(localStorage.getItem(KP+'prices')||'null');if(sv&&sv.bundle>0)PRICE.bundle=+sv.bundle}catch(e){}}
 drawBundle();
-const toggleBundle=()=>{if(open||!WINTER)return;bundle=!bundle;drawBundle();sfx('clink');toast(bundle?'Bundle on: chai + walnuts for ₹'+cost('bundle'):'No bundle today')};
+const toggleBundle=()=>{if(open||!WINTER)return;bundle=!bundle;drawBundle();sfx('clink');toast(bundle?'Bundle on: '+HOT.word+' + '+NUTS.word+' for ₹'+cost('bundle'):'No bundle today')};
 drawTray();
 const toggleTray=()=>{if(open||DAY!==2)return;tray=!tray;drawTray();sfx('clink');toast(tray?'Free tastes are out (₹40 of honey each half-day)':'The tray is covered')};
 const useStool=()=>WINTER?toggleBundle():toggleTray();
@@ -537,14 +562,20 @@ function outfit(p,key){const f=FIT[key];if(!f)return;
 function wear(p,key,buy){const f=FIT[key];if(!f||!buy)return;const n=buy.toLowerCase(),gp=g({class:'newbuy'},p);
   if(/cap/.test(n)){const top=f.hy-f.hr,w=f.hr*.8,y0=top+f.hr*.5;el('path',{d:`M${-w} ${y0} q0 ${-f.hr*.95} ${w} ${-f.hr*.95} q${w} 0 ${w} ${f.hr*.95} z`,fill:'#3a3a6e',class:'ol',"stroke-width":3},gp);
     el('rect',{x:-w-2,y:y0-12,width:w*2+4,height:13,rx:4,fill:'#e3bd00',class:'ol',"stroke-width":2.5},gp);for(let k=0;k<4;k++)el('rect',{x:-w+5+k*(w*2-10)/4,y:y0-10,width:6,height:9,rx:1.5,fill:FUN[k]},gp);return}
-  if(/shawl/.test(n)){const w=f.sw,y=f.ny,thick=/thick/.test(n);el('path',{d:`M${-w} ${y+2} Q 0 ${y+28} ${w} ${y+2} L ${w*.88} ${y+38} Q 0 ${y+62} ${-w*.88} ${y+38} Z`,fill:thick?'#800020':'#fff8ea',class:'ol',"stroke-width":3},gp);
+  if(/shawl|pashmina|wrap/.test(n)){const w=f.sw,y=f.ny,thick=/thick/.test(n),pash=/pashmina/.test(n);el('path',{d:`M${-w} ${y+2} Q 0 ${y+28} ${w} ${y+2} L ${w*.88} ${y+38} Q 0 ${y+62} ${-w*.88} ${y+38} Z`,fill:thick?'#800020':pash?'#f6c1d0':'#fff8ea',class:'ol',"stroke-width":3},gp);
     [['#d02b8f',14],['#00a9bd',24],['#e3bd00',32]].forEach(([c,dy])=>el('path',{d:`M${-w*.9} ${y+dy} Q 0 ${y+dy+24} ${w*.9} ${y+dy}`,fill:'none',stroke:thick?'#ffd34d':c,"stroke-width":3},gp));
     for(let k=0;k<7;k++)el('path',{d:`M${-w*.6+k*w*.2} ${y+49} v9`,stroke:'#5b3a2e',"stroke-width":2},gp);return}
   if(/socks/.test(n)){[-11,11].forEach(x=>{el('rect',{x:x-6,y:-16,width:12,height:16,rx:4,fill:'#d02b8f',class:'ol',"stroke-width":2},gp);el('rect',{x:x-6,y:-12,width:12,height:3,fill:'#fff8ea'},gp)});return}
   const bx=f.sw+4,by=-30;el('path',{d:`M${bx+6} ${by-24} q11 -18 22 0`,fill:'none',stroke:'#a86b43',"stroke-width":3.5},gp);const it=g({},gp);
-  if(/honey/.test(n)){el('rect',{x:bx+8,y:by-36,width:18,height:20,rx:5,fill:'#f2a91c',class:'ol',"stroke-width":2.5},it);el('rect',{x:bx+6,y:by-40,width:22,height:7,rx:3,fill:'#d02b8f',class:'ol',"stroke-width":2},it)}
-  else if(/apples/.test(n))[[10,-26],[24,-28],[17,-36]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:8,fill:'#ff4d6d',class:'ol',"stroke-width":2},it));
-  else{if(/chai/.test(n))el('rect',{x:bx+6,y:by-38,width:14,height:16,rx:3,fill:'#fff8ea',class:'ol',"stroke-width":2},it);if(/walnut/.test(n))[[22,-28],[28,-35]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:6,fill:'#a0703c',class:'ol',"stroke-width":2},it))}
+  const jarIn=(b2,l2)=>{el('rect',{x:bx+8,y:by-36,width:18,height:20,rx:5,fill:b2,class:'ol',"stroke-width":2.5},it);el('rect',{x:bx+6,y:by-40,width:22,height:7,rx:3,fill:l2,class:'ol',"stroke-width":2},it)};
+  const balls=(c,oval)=>[[10,-26],[24,-28],[17,-36]].forEach(([dx,dy])=>el('ellipse',{cx:bx+dx,cy:by+dy,rx:oval?9:8,ry:oval?5.5:8,fill:c,class:'ol',"stroke-width":2},it));
+  if(/jam/.test(n))jarIn('#e8602c','#fff8ea');else if(/honey/.test(n))jarIn('#f2a91c','#d02b8f');
+  else if(/tea/.test(n)){el('rect',{x:bx+8,y:by-38,width:18,height:22,rx:3,fill:'#2f7a52',class:'ol',"stroke-width":2.5},it);el('rect',{x:bx+6,y:by-41,width:22,height:6,rx:2,fill:'#e3bd00',class:'ol',"stroke-width":2},it)}
+  else if(/apple/.test(n))balls('#ff4d6d');else if(/apricot/.test(n))balls('#ffa53a');else if(/plum/.test(n))balls('#7a3cff');
+  else if(/cushion/.test(n))el('rect',{x:bx+5,y:by-40,width:24,height:20,rx:6,fill:'#d02b8f',class:'ol',"stroke-width":2.5,transform:`rotate(-10 ${bx+17} ${by-30})`},it);
+  else if(/mittens/.test(n))el('path',{d:`M${bx+9} ${by-18} v-16 q0 -8 8 -8 q8 0 8 8 v4 q6 -4 8 1 q1 5 -6 8 v3 z`,fill:'#00a9bd',class:'ol',"stroke-width":2},it);
+  else if(/rug/.test(n))el('rect',{x:bx+4,y:by-46,width:26,height:24,rx:12,fill:'#c0392b',class:'ol',"stroke-width":2.5},it);
+  else{if(/chai|kahwa/.test(n))el('rect',{x:bx+6,y:by-38,width:14,height:16,rx:3,fill:'#fff8ea',class:'ol',"stroke-width":2},it);if(/walnut|almond/.test(n))[[22,-28],[28,-35]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:6,fill:/almond/.test(n)?'#c98a5a':'#a0703c',class:'ol',"stroke-width":2},it))}
   el('path',{d:`M${bx} ${by-24} h34 l-3 36 h-28 z`,fill:'#d9b77a',class:'ol',"stroke-width":3},gp);el('path',{d:`M${bx+6} ${by-12} h22`,stroke:'#a86b43',"stroke-width":2,"stroke-dasharray":'3 3'},gp)}
 function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);outfit(inner,key);
   const em=g({class:'emote'},o);el('path',{d:'M-28 -230 h56 a14 14 0 0 1 14 14 v20 a14 14 0 0 1 -14 14 h-20 l-8 12 l-8 -12 h-20 a14 14 0 0 1 -14 -14 v-20 a14 14 0 0 1 14 -14z',fill:'#fffdf6',class:'ol',"stroke-width":3.5},em);
@@ -643,84 +674,112 @@ function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(
 
 /* ---------- the day: each villager has a reason to buy, or not ---------- */
 let open=false,log=[];
-const order=WINTER?['ibex','partridge','yak','fox','cub']:FEST?['goat','marmot','cub','bear','panda']:['goat','monal','pika','yak','panda'];
-// each villager has a price limit; the right sign, the right price beside it, a free taste or a happy yesterday stretches it
+// who comes in which order changes too (the morning and afternoon groups stay the same, and Nell always comes after two others)
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const order=WINTER?shuf(['ibex','partridge','yak']).concat(shuf(['fox','cub'])):FEST?shuf(['goat','marmot','cub']).concat(shuf(['bear','panda'])):shuf(['goat','monal']).concat(['pika'],shuf(['yak','panda']));
+// each villager's limits shift by up to a fifth either way every time you play, rounded to prices you can actually set
+const RF={};Object.keys(CAST).forEach(k=>RF[k]=.8+Math.random()*.4);
+const nice=v=>Math.min(2000,v<200?Math.max(10,Math.floor(v/10)*10):Math.floor(v/50)*50);
+const LM=(k,b)=>nice(b*RF[k]),RS=n=>'₹'+n.toLocaleString('en-IN');
 let D1={},D2={};try{D1=JSON.parse(localStorage.getItem('md-d1')||'{}')||{};D2=JSON.parse(localStorage.getItem('md-d2')||'{}')||{}}catch(e){}
-const BEST_DAY=WINTER?3000+(D2.cub?120:0):FEST?2355:1240;
+let BEST_DAY=0;   // worked out after everything is set up, by trying every sensible way to play the day
 function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key].name),P=k=>PRICE[k],C=cost;
   const yes=(k,think,why,note)=>({buy:ITEMS[k].name,n:C(k),think,why,note}),no=(think,why,note)=>({think,why,note});
-  const back=DAY===2?' Win him on Day 1 and he comes back loyal.':'';
+  const back=DAY===2?' Win him on Day 1 and he comes back loyal.':'',T=WINTER?null:TRIO,U=T&&T.unit,PS=PAIR.small,PB=PAIR.big;
   if(WINTER){
-    if(key==='ibex'){const b=C('bundle'),sep=C('chai')+C('walnuts'),why='Bundling';
-      if(bundle&&b<=250&&b<sep)return {buy:'Chai and walnuts bundle',n:b,think:`Chai and walnuts together for ₹${b}? That’s a deal!`,why,note:`Together they cost less than ₹${sep} apart, so the bundle felt like a saving. Milo pays up to ₹250 for it.`};
-      const hint=!bundle?'Offer the chai and walnuts bundle and he’d pay up to ₹250 for both.':b>=sep?`The bundle cost no less than buying both apart (₹${sep}), so it didn’t feel like a deal.`:`₹${b} was past his ₹250 limit for the bundle.`;
-      if(C('chai')<=40)return yes('chai','Just a cup of chai for me, thanks.',why,'He only bought the chai. '+hint);
+    if(key==='ibex'){const b=C('bundle'),sep=C('chai')+C('walnuts'),bl=LM('ibex',250),cl=LM('ibex',40),why='Bundling';
+      if(bundle&&b<=bl&&b<sep)return {buy:BUNDLE_NAME,n:b,think:`${cap1(HOT.word)} and ${NUTS.word} together for ${RS(b)}? That’s a deal!`,why,note:`Together they cost less than ${RS(sep)} apart, so the bundle felt like a saving. Milo pays up to ${RS(bl)} for it.`};
+      const hint=!bundle?`Offer the ${HOT.word} and ${NUTS.word} bundle and he’d pay up to ${RS(bl)} for both.`:b>=sep?`The bundle cost no less than buying both apart (${RS(sep)}), so it didn’t feel like a deal.`:`${RS(b)} was past his ${RS(bl)} limit for the bundle.`;
+      if(C('chai')<=cl)return yes('chai',`Just a cup of ${HOT.word} for me, thanks.`,why,`He only bought the ${HOT.word}. `+hint);
       return no('Too dear for a cold morning.',why,hint)}
-    if(key==='partridge'){const so=C('socks'),why='A good cause';
-      if(s===2&&so<=300)return yes('socks','A book for a child with every sale? Then I’m in!',why,'Knowing her socks would also buy a child a book (₹10 from each sale) made Dot happy to pay more: up to ₹300.');
-      if(s===2)return no(`A kind idea… but ₹${so} for socks?`,why,'The good cause moved her, but not past ₹300.');
-      if(so<=150)return yes('socks',`Warm socks for ₹${so}. Lovely.`,why,'She bought because they were cheap. “Each sale gives a child a book” would have let you charge up to ₹300.');
-      return no('Nice socks. Not today.',why,'Dot likes her shopping to do some good. “Each sale gives a child a book” would have won her, at up to ₹300.')}
-    if(key==='yak'){const c=C('cap'),sw=C('shawl'),anchor=sw>=1000?Math.min(Math.floor(sw*.03)*10,500):250,lim=D1.yak?Math.max(anchor,450):anchor,why=D1.yak&&anchor<450?'Loyalty':'Anchoring';
-      if(c<=lim)return yes('cap',D1.yak?'Back again! A warm cap for winter, please.':`The shawl’s ₹${sw}… so ₹${c} for a cap is fair.`,why,(D1.yak?'Kiko bought from you on the first day, so he’d pay up to ₹450 on trust alone. ':'')+(sw>=1000?`Next to the ₹${sw} shawl, he’d pay up to ₹${anchor}.`:'With no pricey shawl beside it, his anchor was low.'));
-      return no(`₹${c} for a cap? Too much.`,why,`His limit today was ₹${lim}. `+(sw>=1000?'':'A shawl at ₹1,000 or more would have raised it. ')+(D1.yak?'':'Win him on Day 1 and he comes back trusting you.'))}
-    if(key==='fox'){const sw=C('shawl'),why='Framing';
-      if(s===1&&sw<=1800)return yes('shawl','Ten winters from one shawl? Then it’s worth every rupee!',why,`₹${sw} sounds like a lot, but spread over ten winters it felt small. With that sign, Tess pays up to ₹1,800.`);
-      if(s===1)return no(`Even for ten winters, ₹${sw} is too much.`,why,'Thinking in winters worked on her, but not past ₹1,800.');
-      if(sw<=900)return yes('shawl',`A thick shawl for ₹${sw}? Yes please.`,why,'She bought because it was cheap. “Shawls that last 10 winters” would have let you charge up to ₹1,800.');
-      return no(`₹${sw}? That’s a lot of money.`,why,'One big number scared her off. “Shawls that last 10 winters” makes the same price feel worth it, and she’d pay up to ₹1,800.')}
-    if(key==='cub'){const h=C('honey'),lim=D2.cub?300:180,why='Loyalty';
-      if(h<=lim)return yes('honey',D2.cub?'Remember me from the festival? Honey for the cold, please!':`Honey for ₹${h}. Good for a cold day.`,why,D2.cub?'Bo bought from you on Festival day, so he trusts you: up to ₹300 for honey.':'He paid what he’d pay any stall: up to ₹180. Win him on Festival day and he’d trust you with ₹300.');
-      return no(`₹${h} for honey? Not from a stall I don’t know.`,why,`His limit was ₹${lim}. `+(D2.cub?'':'Win him on Festival day and he’d trust you with up to ₹300.'))}}
-  if(key==='goat'){const m=C('medium'),L=P('large'),why='The decoy effect';
-    if(DAY===2&&D1.goat){if(m<=250)return yes('medium','Back for more of that honey!','Loyalty','Pip bought from you yesterday, so he trusted you today. No decoy needed, up to ₹250.');
-      return no(`₹${m}? Yesterday was better value.`,'Loyalty',`He came back because he trusted you, but ₹${m} was past his ₹250 limit.`)}
-    if(L>=2*P('medium')&&m<=250)return yes('medium',`₹${C('large')} for the big one? Then the medium jar’s a steal!`,why,`The ₹${C('large')} jar made ₹${m} look like a bargain. With a decoy at twice the price, Pip stretches to ₹250 for the medium.`+back);
-    const hint=(L>=2*P('medium')?`₹${m} was past his ₹250 limit, even with the big jar beside it.`:`The big jar wasn’t twice the medium (₹${2*P('medium')} or more), so nothing made the medium look cheap. Without a decoy, Pip’s limit is ₹150.`)+back;
-    const pick=m<=150?'medium':C('small')<=150?'small':null;
-    if(pick)return yes(pick,'Hmm, it all looks a bit pricey. I’ll play it safe.',why,`He took the ${pick} jar at ₹${C(pick)}. `+hint);
-    return no('All this honey is too dear for me today.',why,hint)}
-  if(key==='monal'){const a=P('apples'),why='Scarcity';
-    if(s===1&&a<=150)return yes('apples','Only three left?! I’ll take them before anyone else does!',why,'“Only 3 left” made waiting feel like losing. With it, Juno pays up to ₹150.');
-    if(a<=60)return yes('apples',`Apples for ₹${a}? I can’t say no to that.`,why,`She bought because they were cheap. “Only 3 left” would have let you charge up to ₹150.`);
-    if(s===1)return no(`Only three left… but ₹${a}? I’ll pass.`,why,`Scarcity got her attention, but she won’t pay more than ₹150.`);
-    return no('So shiny… I’ll come back later.',why,'She browsed and left. “Only 3 left” would have made her buy now, at up to ₹150.')}
-  if(key==='pika'){const a=P('apples'),crowd=buyers.length>=2,why='Social proof';
-    if((crowd||s===2)&&a<=120)return yes('apples',crowd?buyers.join(' and ')+' both bought here… it must be good!':'Everyone’s favourite? Then it’s mine too!',why,(crowd?'Two shoppers ahead of her bought, and that was enough.':'“Everyone’s favourite” told her the crowd had already chosen.')+' Her limit is ₹120.');
-    if(crowd||s===2)return no(`Everyone likes them, but ₹${a} is a lot for me.`,why,`The crowd won her over, but not at ₹${a}. Her limit is ₹120.`);
+    if(key==='partridge'){const so=C('socks'),hi=LM('partridge',300),lo=LM('partridge',150),w=WARM.word,why='A good cause';
+      if(s===2&&so<=hi)return yes('socks','A book for a child with every sale? Then I’m in!',why,`Knowing her ${w} would also buy a child a book (₹10 from each sale) made Dot happy to pay more: up to ${RS(hi)}.`);
+      if(s===2)return no(`A kind idea… but ${RS(so)} for ${w}?`,why,`The good cause moved her, but not past ${RS(hi)}.`);
+      if(so<=lo)return yes('socks',`Warm ${w} for ${RS(so)}. Lovely.`,why,`She bought because they were cheap. “Each sale gives a child a book” would have let you charge up to ${RS(hi)}.`);
+      return no(`Nice ${w}. Not today.`,why,`Dot likes her shopping to do some good. “Each sale gives a child a book” would have won her, at up to ${RS(hi)}.`)}
+    if(key==='yak'){const c=C('cap'),sw=C('shawl'),capM=LM('yak',500),plain=LM('yak',250),loy=LM('yak',450),anchor=sw>=1000?Math.min(Math.floor(sw*.03)*10,capM):plain,lim=D1.yak?Math.max(anchor,loy):anchor,why=D1.yak&&anchor<loy?'Loyalty':'Anchoring';
+      if(c<=lim)return yes('cap',D1.yak?'Back again! A warm cap for winter, please.':`The shawl’s ${RS(sw)}… so ${RS(c)} for a cap is fair.`,why,(D1.yak?`Kiko bought from you on the first day, so he’d pay up to ${RS(loy)} on trust alone. `:'')+(sw>=1000?`Next to the ${RS(sw)} shawl, he’d pay up to ${RS(anchor)}.`:'With no pricey shawl beside it, his anchor was low.'));
+      return no(`${RS(c)} for a cap? Too much.`,why,`His limit today was ${RS(lim)}. `+(sw>=1000?'':'A shawl at ₹1,000 or more would have raised it. ')+(D1.yak?'':'Win him on Day 1 and he comes back trusting you.'))}
+    if(key==='fox'){const sw=C('shawl'),hi=LM('fox',1800),lo=LM('fox',900),why='Framing';
+      if(s===1&&sw<=hi)return yes('shawl','Ten winters from one shawl? Then it’s worth every rupee!',why,`${RS(sw)} sounds like a lot, but spread over ten winters it felt small. With that sign, Tess pays up to ${RS(hi)}.`);
+      if(s===1)return no(`Even for ten winters, ${RS(sw)} is too much.`,why,`Thinking in winters worked on her, but not past ${RS(hi)}.`);
+      if(sw<=lo)return yes('shawl',`A thick shawl for ${RS(sw)}? Yes please.`,why,`She bought because it was cheap. “Shawls that last 10 winters” would have let you charge up to ${RS(hi)}.`);
+      return no(`${RS(sw)}? That’s a lot of money.`,why,`One big number scared her off. “Shawls that last 10 winters” makes the same price feel worth it, and she’d pay up to ${RS(hi)}.`)}
+    if(key==='cub'){const h=C('honey'),lim=D2.cub?LM('cub',300):LM('cub',180),w=SWEET.word,why='Loyalty';
+      if(h<=lim)return yes('honey',D2.cub?`Remember me from the festival? ${cap1(w)} for the cold, please!`:`${cap1(w)} for ${RS(h)}. Good for a cold day.`,why,D2.cub?`Bo bought from you on Festival day, so he trusts you: up to ${RS(lim)} for ${w}.`:`He paid what he’d pay any stall: up to ${RS(lim)}. Win him on Festival day and he’d trust you with more.`);
+      return no(`${RS(h)} for ${w}? Not from a stall I don’t know.`,why,`His limit was ${RS(lim)}. `+(D2.cub?'':'Win him on Festival day and he’d trust you with more.'))}}
+  if(key==='goat'){const m=C('medium'),L=P('large'),hi=LM('goat',250),lo=LM('goat',150),why='The decoy effect';
+    if(DAY===2&&D1.goat){if(m<=hi)return yes('medium',`Back for more of that ${T.word}!`,'Loyalty',`Pip bought from you yesterday, so he trusted you today. No decoy needed, up to ${RS(hi)}.`);
+      return no(`${RS(m)}? Yesterday was better value.`,'Loyalty',`He came back because he trusted you, but ${RS(m)} was past his ${RS(hi)} limit.`)}
+    if(L>=2*P('medium')&&m<=hi)return yes('medium',`${RS(C('large'))} for the big one? Then the medium ${U}’s a steal!`,why,`The ${RS(C('large'))} ${U} made ${RS(m)} look like a bargain. With a decoy at twice the price, Pip stretches to ${RS(hi)} for the medium.`+back);
+    const hint=(L>=2*P('medium')?`${RS(m)} was past his ${RS(hi)} limit, even with the big ${U} beside it.`:`The big ${U} wasn’t twice the medium (${RS(2*P('medium'))} or more), so nothing made the medium look cheap. Without a decoy, Pip’s limit is ${RS(lo)}.`)+back;
+    const pick=m<=lo?'medium':C('small')<=lo?'small':null;
+    if(pick)return yes(pick,'Hmm, it all looks a bit pricey. I’ll play it safe.',why,`He took the ${pick} ${U} at ${RS(C(pick))}. `+hint);
+    return no(`All this ${T.word} is too dear for me today.`,why,hint)}
+  if(key==='monal'){const a=P('apples'),hi=LM('monal',150),lo=LM('monal',60),why='Scarcity';
+    if(s===1&&a<=hi)return yes('apples','Only three left?! I’ll take them before anyone else does!',why,`“Only 3 left” made waiting feel like losing. With it, Juno pays up to ${RS(hi)}.`);
+    if(a<=lo)return yes('apples',`${FRUIT.short} for ${RS(a)}? I can’t say no to that.`,why,`She bought because they were cheap. “Only 3 left” would have let you charge up to ${RS(hi)}.`);
+    if(s===1)return no(`Only three left… but ${RS(a)}? I’ll pass.`,why,`Scarcity got her attention, but she won’t pay more than ${RS(hi)}.`);
+    return no('So shiny… I’ll come back later.',why,`She browsed and left. “Only 3 left” would have made her buy now, at up to ${RS(hi)}.`)}
+  if(key==='pika'){const a=P('apples'),hi=LM('pika',120),crowd=buyers.length>=2,why='Social proof';
+    if((crowd||s===2)&&a<=hi)return yes('apples',crowd?buyers.join(' and ')+' both bought here… it must be good!':'Everyone’s favourite? Then it’s mine too!',why,(crowd?'Two shoppers ahead of her bought, and that was enough.':'“Everyone’s favourite” told her the crowd had already chosen.')+` Her limit is ${RS(hi)}.`);
+    if(crowd||s===2)return no(`Everyone likes them, but ${RS(a)} is a lot for me.`,why,`The crowd won her over, but not at ${RS(a)}. Her limit is ${RS(hi)}.`);
     return no(buyers.length?'Only one shopper so far… I’ll wait and see.':'Nobody’s buying… maybe not today.',why,'One buyer isn’t a crowd. Two sales before her, or “Everyone’s favourite”, would have won her.')}
-  if(key==='yak'){const c=P('cap'),sh=P('shawl'),lim=sh>=600?Math.min(Math.floor(sh*.045)*10,550):250,why='Anchoring';
-    if(sh<=500)return yes('shawl',`A Kullu shawl for just ₹${sh}? I’ll take that instead!`,why,`The shawl was cheap enough to buy outright. Priced at ₹600 or more, it would have made a pricier cap look small instead.`);
-    if(c<=lim)return yes('cap',sh>=600?`The shawl’s ₹${sh}… so a cap at ₹${c} is fair.`:`₹${c} for a cap. Fine.`,why,sh>=600?`The ₹${sh} shawl set the scale. Next to it, Kiko would pay up to ₹${lim} for the cap.`:`With no pricey shawl beside it, his limit for a cap was ₹250.`);
-    return no(`₹${c} for a cap? That’s too much.`,why,sh>=600?`Next to the ₹${sh} shawl he’d have paid up to ₹${lim}, but not ₹${c}.`:`At ₹${sh}, the shawl made nothing look small, so his limit was ₹250. A shawl at ₹600 or more raises it.`)}
-  if(key==='panda'){const sm=C('small'),why='Where it comes from',hb=DAY===2?' Win her on Day 1 and she’d come back without needing the sign.':'';
-    if(DAY===2&&D1.panda){if(sm<=200)return yes('small','I know your honey’s local. My usual, please!','Loyalty','Wren bought from you yesterday, so she didn’t need the sign today. Her limit is still ₹200.');
-      return no(`₹${sm} for my usual jar? Not today.`,'Loyalty',`She trusts you now, but ₹${sm} was past her ₹200 limit.`)}
-    if(s===3&&sm<=200)return yes('small','Made in the hills? Then it’s made for me.',why,'Wren buys local. Saying where it’s made won her over, at up to ₹200 for the small jar.');
-    if(s===3)return no(`Local honey! But ₹${sm} for a small jar…`,why,`The sign won her; the price didn’t. Her limit for the small jar is ₹200.`+hb);
+  if(key==='yak'){const c=P('cap'),sh=P('shawl'),capM=LM('yak',550),plain=LM('yak',250),buyBig=LM('yak',500),lim=sh>=600?Math.min(Math.floor(sh*.045)*10,capM):plain,why='Anchoring';
+    if(sh<=buyBig)return yes('shawl',`${cap1(PB.a)} for just ${RS(sh)}? I’ll take that instead!`,why,`The ${PB.word} was cheap enough to buy outright. Priced at ₹600 or more, it would have made a pricier ${PS.short.toLowerCase()} look small instead.`);
+    if(c<=lim)return yes('cap',sh>=600?`The ${PB.word}’s ${RS(sh)}… so ${RS(c)} for ${PS.a} is fair.`:`${RS(c)} for ${PS.a}. Fine.`,why,sh>=600?`The ${RS(sh)} ${PB.word} set the scale. Next to it, Kiko would pay up to ${RS(lim)}.`:`With nothing pricey beside it, his limit was ${RS(plain)}.`);
+    return no(`${RS(c)} for ${PS.a}? That’s too much.`,why,sh>=600?`Next to the ${RS(sh)} ${PB.word} he’d have paid up to ${RS(lim)}, but not ${RS(c)}.`:`At ${RS(sh)}, the ${PB.word} made nothing look small, so his limit was ${RS(plain)}. Priced at ₹600 or more, it raises it.`)}
+  if(key==='panda'){const sm=C('small'),hi=LM('panda',200),why='Where it comes from',hb=DAY===2?' Win her on Day 1 and she’d come back without needing the sign.':'';
+    if(DAY===2&&D1.panda){if(sm<=hi)return yes('small',`I know your ${T.word}’s local. My usual, please!`,'Loyalty',`Wren bought from you yesterday, so she didn’t need the sign today. Her limit is ${RS(hi)}.`);
+      return no(`${RS(sm)} for my usual ${U}? Not today.`,'Loyalty',`She trusts you now, but ${RS(sm)} was past her ${RS(hi)} limit.`)}
+    if(s===3&&sm<=hi)return yes('small','Made in the hills? Then it’s made for me.',why,`Wren buys local. Saying where it’s made won her over, at up to ${RS(hi)} for the small ${U}.`);
+    if(s===3)return no(`Local ${T.word}! But ${RS(sm)} for a small ${U}…`,why,`The sign won her; the price didn’t. Her limit for the small ${U} is ${RS(hi)}.`+hb);
     return no('Hmm, where’s this from? Never mind.',why,'She wanted to know it was local. “Made in the hills” would have won her.'+hb)}
   // festival day
-  if(key==='marmot'){const m=C('medium'),why='Reciprocity';
-    if(tray&&m<=300)return yes('medium','You gave me a taste… I’d feel rude not to buy!',why,'A free taste made Lumi want to give something back. With it, she pays up to ₹300 for the medium jar.');
-    if(tray)return no(`That was lovely… but ₹${m}? I can’t.`,why,`The free taste warmed her up, but ₹${m} was past her ₹300 limit.`);
-    if(m<=120)return yes('medium',`Only ₹${m}? I’ll risk it.`,why,'She took a chance because it was cheap. A free taste would have let you charge up to ₹300.');
-    return no('Is it any good? I can’t tell without trying.',why,'Lumi won’t buy honey she hasn’t tasted. Put out the free-taste tray and she’d pay up to ₹300.')}
-  if(key==='cub'){const sw=C('shawl'),why='Loss aversion';
-    if(s===4&&sw<=1200)return yes('shawl','Last day?! I can’t miss out on a Kullu shawl!',why,`“Last day of the season” made not buying feel like losing it. With it, Bo pays up to ₹1,200.`);
-    if(s===4)return no(`I’d hate to miss it… but ₹${sw}!`,why,`The sign worked on him, but ₹${sw} was past his ₹1,200 limit.`);
-    if(sw<=600)return yes('shawl',`A Kullu shawl for ₹${sw}? Yes please!`,why,'He bought because it was cheap. “Last day of the season” would have let you charge up to ₹1,200.');
-    return no('What a lovely shawl. Maybe next week.',why,'Bo thought he could come back any time. “Last day of the season” would have made waiting feel like a loss.')}
-  if(key==='bear'){const L=C('large'),why='Charm pricing';
-    if(tray)return no('Free honey! Mmm… I’m too full to buy anything now.',why,'Gus ate the free tastes and left full. Cover the tray at lunch, before he comes.');
-    if(charm&&L<=499)return yes('large',`Only ₹${L}? That’s practically ₹${Math.floor(L/100)*100}!`,why,'A price ending in 9 feels a whole step cheaper. With it, Gus pays up to ₹499 for the big jar.');
-    if(charm)return no(`₹${L}, even ending in 9, is too much.`,why,`Prices ending in 9 worked on him, but not past ₹499.`);
-    if(L<=300)return yes('large',`₹${L} for the big jar? Done.`,why,'He bought because it was cheap. With prices ending in 9, he’d have paid up to ₹499.');
-    return no(`₹${L} for honey? That sounds like a lot.`,why,'A round price felt expensive to Gus, so his limit was ₹300. Turn on “End prices in 9” and he’d pay ₹499.')}}
+  if(key==='marmot'){const m=C('medium'),hi=LM('marmot',300),lo=LM('marmot',120),why='Reciprocity';
+    if(tray&&m<=hi)return yes('medium','You gave me a taste… I’d feel rude not to buy!',why,`A free taste made Lumi want to give something back. With it, she pays up to ${RS(hi)} for the medium ${U}.`);
+    if(tray)return no(`That was lovely… but ${RS(m)}? I can’t.`,why,`The free taste warmed her up, but ${RS(m)} was past her ${RS(hi)} limit.`);
+    if(m<=lo)return yes('medium',`Only ${RS(m)}? I’ll risk it.`,why,`She took a chance because it was cheap. A free taste would have let you charge up to ${RS(hi)}.`);
+    return no('Is it any good? I can’t tell without trying.',why,`Lumi won’t buy ${T.word} she hasn’t tasted. Put out the free-taste tray and she’d pay up to ${RS(hi)}.`)}
+  if(key==='cub'){const sw=C('shawl'),hi=LM('cub',1200),lo=LM('cub',600),why='Loss aversion';
+    if(s===4&&sw<=hi)return yes('shawl',`Last day?! I can’t miss out on ${PB.a}!`,why,`“Last day of the season” made not buying feel like losing it. With it, Bo pays up to ${RS(hi)}.`);
+    if(s===4)return no(`I’d hate to miss it… but ${RS(sw)}!`,why,`The sign worked on him, but ${RS(sw)} was past his ${RS(hi)} limit.`);
+    if(sw<=lo)return yes('shawl',`${cap1(PB.a)} for ${RS(sw)}? Yes please!`,why,`He bought because it was cheap. “Last day of the season” would have let you charge up to ${RS(hi)}.`);
+    return no(`What a lovely ${PB.word}. Maybe next week.`,why,'Bo thought he could come back any time. “Last day of the season” would have made waiting feel like a loss.')}
+  if(key==='bear'){const L=C('large'),hi=nice(500*RF.bear)-1,lo=LM('bear',300),why='Charm pricing';
+    if(tray)return no(`Free ${T.word}! Mmm… I’m too full to buy anything now.`,why,'Gus ate the free tastes and left full. Cover the tray at lunch, before he comes.');
+    if(charm&&L<=hi)return yes('large',`Only ${RS(L)}? That’s practically ${RS(Math.floor(L/100)*100)}!`,why,`A price ending in 9 feels a whole step cheaper. With it, Gus pays up to ${RS(hi)} for the big ${U}.`);
+    if(charm)return no(`${RS(L)}, even ending in 9, is too much.`,why,`Prices ending in 9 worked on him, but not past ${RS(hi)}.`);
+    if(L<=lo)return yes('large',`${RS(L)} for the big ${U}? Done.`,why,`He bought because it was cheap. With prices ending in 9, he’d have paid up to ${RS(hi)}.`);
+    return no(`${RS(L)} for ${T.word}? That sounds like a lot.`,why,`A round price felt expensive to Gus, so his limit was ${RS(lo)}. Turn on “End prices in 9” and he’d pay ${RS(hi)}.`)}}
+// the best day possible with today's stock and today's villagers: try every sensible mix of prices, signs, tray and bundle.
+// It runs in small slices in the background during the morning, so the game never stalls.
+const snap=()=>({p:Object.assign({},PRICE),sign,tray,charm,bundle,log});
+function unsnap(k){Object.keys(PRICE).forEach(x=>delete PRICE[x]);Object.assign(PRICE,k.p);sign=k.sign;tray=k.tray;charm=k.charm;bundle=k.bundle;log=k.log}
+function* bestGen(){const u=a=>[...new Set(a.map(v=>Math.min(2000,Math.max(10,v))))],B=[false,true];let best=0,n=0;
+  const run=(p,s1,s2,t1,t2,ch,b1,b2)=>{Object.assign(PRICE,p);charm=ch;log=[];let tot=0;
+    order.forEach((k,i)=>{const am=i<3;sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
+    return tot-(FEST?40*((t1?1:0)+(t2?1:0)):0)};
+  if(WINTER){const sh=u([LM('fox',900),LM('fox',1800),1000,2000]),cp=u([LM('yak',250),LM('yak',450),LM('yak',500),2000].concat(sh.map(x=>Math.floor(x*.03)*10)));
+    for(const chai of u([LM('ibex',40),2000]))for(const honey of u([LM('cub',180),LM('cub',300)]))for(const socks of u([LM('partridge',150),LM('partridge',300),2000]))for(const shawl of sh)for(const cap of cp)
+      for(const b1 of B)for(const b2 of B)for(const s1 of [0,2])for(const s2 of [0,1]){best=Math.max(best,run({chai,walnuts:2000,bundle:LM('ibex',250),honey,socks,cap,shawl},s1,s2,false,false,false,b1,b2));if(++n%150===0)yield}}
+  else if(FEST){const md=u([LM('goat',150),LM('goat',250),LM('marmot',300),LM('marmot',120),2000]),lg=u([nice(500*RF.bear),LM('bear',300),2000].concat(md.map(x=>2*x)));
+    for(const small of u([LM('goat',150),LM('panda',200),2000]))for(const medium of md)for(const large of lg)for(const shawl of u([LM('cub',600),LM('cub',1200),2000]))
+      for(const ch of B)for(const t1 of B)for(const t2 of B)for(const s1 of [0,4])for(const s2 of [0,3]){best=Math.max(best,run({small,medium,large,apples:2000,cap:2000,shawl},s1,s2,t1,t2,ch,false,false));if(++n%150===0)yield}}
+  else{const sh=u([LM('yak',500),600,2000]),cp=u([LM('yak',250),LM('yak',550),2000].concat(sh.map(x=>Math.floor(x*.045)*10)));
+    for(const small of u([LM('goat',150),LM('panda',200),2000]))for(const medium of u([LM('goat',150),LM('goat',250),2000]))for(const apples of u([LM('monal',60),LM('monal',150),LM('pika',120),2000]))for(const shawl of sh)for(const cap of cp)
+      for(const s1 of [0,1,2])for(const s2 of [0,3]){best=Math.max(best,run({small,medium,large:2000,apples,cap,shawl},s1,s2,false,false,false,false,false));if(++n%150===0)yield}}
+  return best}
+let bestIt=null,bestDone=false;
+function bestSlice(ms){if(bestDone)return;const k=snap();let r;try{const t=performance.now();do{r=bestIt.next()}while(!r.done&&performance.now()-t<ms)}finally{unsnap(k)}
+  if(r.done){BEST_DAY=r.value;bestDone=true}}
+function startBest(){bestIt=bestGen();const tick=()=>{bestSlice(10);if(!bestDone)setTimeout(tick,40)};setTimeout(tick,1200)}
+function finishBest(){if(!bestDone&&bestIt)bestSlice(1e9)}
 const step=v=>v<200?10:50;
 function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.innerHTML='';
   if(DAY===2){const r=document.createElement('div');r.className='prow tg';r.innerHTML='<b>End prices in 9<small>₹199, not ₹200</small></b><button class="ptog" type="button" aria-pressed="'+charm+'">'+(charm?'On':'Off')+'</button>';
     r.querySelector('.ptog').onclick=()=>{charm=!charm;try{localStorage.setItem(KP+'charm',charm?'1':'0')}catch(e){}for(const q in ITEMS)setPrice(q,PRICE[q],true);sfx('tap');showPrices(k)};pl.appendChild(r)}
-  Object.keys(ITEMS).concat(WINTER?['bundle']:[]).forEach(key=>{const r=document.createElement('div'),nm=ITEMS[key]?ITEMS[key].short:'Chai + nuts bundle';r.className='prow'+(key===k?' hi':'');
+  Object.keys(ITEMS).concat(WINTER?['bundle']:[]).forEach(key=>{const r=document.createElement('div'),nm=ITEMS[key]?ITEMS[key].short:cap1(HOT.word)+' + '+NUTS.word;r.className='prow'+(key===k?' hi':'');
     r.innerHTML='<b>'+nm+'</b><button class="step" type="button" aria-label="Lower the '+nm+' price">−</button><output>₹'+cost(key)+'</output><button class="step" type="button" aria-label="Raise the '+nm+' price">+</button>';
     const [dn,up]=r.querySelectorAll('.step'),out=r.querySelector('output');
     const go=d=>{const v=PRICE[key],nv=Math.max(10,Math.min(2000,d>0?v+step(v):v-step(v-1)));setPrice(key,nv);out.textContent='₹'+cost(key);sfx('tap')};
@@ -759,7 +818,7 @@ const toDay=d=>{if(d>1)location.hash='day'+d;else history.replaceState(null,'',l
 const unlocked=d=>d>=1&&d<=3;
 
 /* ---------- dusk: the ledger ---------- */
-function endDay(){const sold=log.filter(l=>l.buy);
+function endDay(){finishBest();const sold=log.filter(l=>l.buy);
   // Day 1 is remembered: whoever bought comes back loyal on Festival day
   const won=k=>log.some(l=>l.key===k&&l.buy);
   try{if(DAY===1)localStorage.setItem('md-d1',JSON.stringify({goat:won('goat'),panda:won('panda'),yak:won('yak')}));if(FEST)localStorage.setItem('md-d2',JSON.stringify({cub:won('cub')}))}catch(e){}
@@ -785,10 +844,10 @@ function endDay(){const sold=log.filter(l=>l.buy);
 
 /* ---------- the sticker book: one sticker for each nudge you get to work ---------- */
 const STICKERS=[
-  {k:'The decoy effect',t:'The decoy',d:'A big jar makes the medium one look cheap',who:'goat',day:1},
+  {k:'The decoy effect',t:'The decoy',d:'A big size makes the medium one look cheap',who:'goat',day:1},
   {k:'Scarcity',t:'Only a few left',d:'Short stock makes people buy now',who:'monal',day:1},
   {k:'Social proof',t:'Follow the crowd',d:'People buy what others are buying',who:'pika',day:1},
-  {k:'Anchoring',t:'The anchor',d:'A pricey shawl makes a cap feel small',who:'yak',day:1},
+  {k:'Anchoring',t:'The anchor',d:'A pricey piece makes the one beside it feel small',who:'yak',day:1},
   {k:'Where it comes from',t:'Made locally',d:'Knowing where it’s from can win a sale',who:'panda',day:1},
   {k:'Loyalty',t:'Old friends',d:'Win someone once and they come back trusting you',who:null,day:2},
   {k:'Reciprocity',t:'A free taste',d:'A small gift makes people want to give back',who:'marmot',day:2},
@@ -808,7 +867,7 @@ function stickerFor(key,d){if(!d.buy)return null;const s=sign;
   if(key==='marmot')return tray?'Reciprocity':null;
   if(key==='cub'){if(WINTER)return D2.cub?'Loyalty':null;return s===4?'Loss aversion':null}
   if(key==='bear')return charm?'Charm pricing':null;
-  if(key==='ibex')return d.buy==='Chai and walnuts bundle'?'Bundling':null;
+  if(key==='ibex')return d.buy===BUNDLE_NAME?'Bundling':null;
   if(key==='partridge')return s===2?'A good cause':null;
   if(key==='fox')return s===1?'Framing':null;
   return null}
@@ -846,9 +905,9 @@ function postFront(){const f=W.cloneNode(true);f.removeAttribute('class');f.remo
   el('text',{x:bx0+26,y:by0+86,style:'font:700 44px Fredoka,sans-serif;fill:#800020'},bn).textContent=DAYNAME[DAY];
   return f}
 // what worked, in everyday words rather than marketing terms
-const PLAIN={'The decoy effect':'a big jar that made the medium one look cheap','Scarcity':'saying only 3 were left','Social proof':'letting them see others buying','Anchoring':'a pricey shawl beside the caps',
+const PLAIN={'The decoy effect':'a big size that made the medium one look cheap','Scarcity':'saying only 3 were left','Social proof':'letting them see others buying','Anchoring':'a pricey piece beside a cheaper one',
   'Where it comes from':'saying it was made in the hills','Loyalty':'old customers coming back','Reciprocity':'free tastes','Loss aversion':'calling it the last day of the season',
-  'Charm pricing':'prices ending in 9','Bundling':'a chai and walnut bundle','A good cause':'giving a child a book with each sale','Framing':'shawls that last 10 winters'};
+  'Charm pricing':'prices ending in 9','Bundling':'a bundle of two things','A good cause':'giving a child a book with each sale','Framing':'shawls that last 10 winters'};
 function wrapText(t,n){const w=t.split(' '),out=[];let line='';w.forEach(x=>{if((line+' '+x).trim().length>n){out.push(line.trim());line=x}else line+=' '+x});if(line.trim())out.push(line.trim());return out}
 function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('viewBox','0 0 1005 670');b.setAttribute('aria-hidden','true');
   const sold=log.filter(l=>l.buy),best=sold.slice().sort((a,c)=>c.n-a.n)[0];
@@ -911,10 +970,11 @@ function showPostcard(){const pf=$('#pf'),pb=$('#pb'),card=$('#card3d');pf.inner
 
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
+startBest();
 function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()};
   const other=[1,2,3].filter(d=>d!==DAY&&unlocked(d));
   const days=other.length?{t:'Other days',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Which market day?',other.map(d=>({t:DAYNAME[d]+' →',fn:()=>toDay(d)})).concat([{t:'Stay here',soft:true,fn:morning}]))}:null;
-  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle chai with walnuts.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
+  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
   if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
   const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
   if(days)b.push(days);
