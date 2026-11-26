@@ -153,7 +153,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .prow.hi{background:#fff0c4}
 .step{width:38px;height:38px;border-radius:50%;border:0;background:var(--honey);font:700 22px/1 var(--font);color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset,0 3px 0 #0000001f}
 .step:active{transform:translateY(2px)}
-.prices .btn{margin-top:12px;width:100%}
+.prices .btn{margin-top:12px;width:100%;position:sticky;bottom:0;z-index:2}
 .prow.tg{grid-template-columns:1fr auto}
 .prow.tg small{display:block;font:500 13px var(--font);color:#9a7b62}
 .ptog{border:0;border-radius:999px;padding:8px 16px;font:700 15px var(--font);background:#e9dccb;color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset}
@@ -450,17 +450,21 @@ const useStool=()=>WINTER?toggleBundle():toggleTray();
 TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();useStool()}});
 
 /* ---------- the shopkeeper: you, drawn from the choices you make ---------- */
-const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a'],style:['long','bob','curly','short'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c'],extra:['flower','glasses','none']};
-const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',short:'Short'},extra:{flower:'Flower clip',glasses:'Glasses',none:'Nothing'}};
-let ME={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,extra:'flower'};
+const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a'],style:['long','bob','curly','short','side'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c'],top:['dress','kurta','shirt'],face:['none','moustache','beard'],extra:['flower','glasses','cap','none']};
+const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',short:'Short',side:'Side part'},top:{dress:'Dress',kurta:'Kurta',shirt:'Shirt'},face:{none:'None',moustache:'Moustache',beard:'Beard'},extra:{flower:'Flower clip',glasses:'Glasses',cap:'Himachali cap',none:'Nothing'}};
+let ME={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,top:'dress',face:'none',extra:'flower'};
 try{Object.assign(ME,JSON.parse(localStorage.getItem('md-me')||'{}'))}catch(e){}
 function keeper(i,m){const SKIN=LOOK.skin[m.skin]||LOOK.skin[0],HAIR=LOOK.hair[m.hair]||LOOK.hair[0],OUT=LOOK.outfit[m.outfit]||LOOK.outfit[0];
   // hair that falls behind the shoulders
   if(m.style==='long')el('path',{d:'M-36 -136 Q -48 -92 -34 -58 Q -10 -50 0 -54 Q 10 -50 34 -58 Q 48 -92 36 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   if(m.style==='bob')el('path',{d:'M-38 -136 Q -46 -104 -36 -94 Q 0 -86 36 -94 Q 46 -104 38 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   if(m.style==='curly')[[-34,-104],[34,-104],[-38,-126],[38,-126],[-28,-150],[28,-150],[0,-164],[-16,-162],[16,-162]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:15,fill:HAIR,class:'ol',"stroke-width":3},i));
-  el('rect',{x:-13,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i);el('rect',{x:3,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i);
-  el('path',{d:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',fill:OUT,class:'ol'},i);
+  const top=m.top||'dress',LEG=top==='kurta'?'#fff8ea':top==='shirt'?'#3a3a6e':'#3a2a2a';
+  if(top==='dress'){el('rect',{x:-13,y:-34,width:10,height:34,rx:5,fill:LEG},i);el('rect',{x:3,y:-34,width:10,height:34,rx:5,fill:LEG},i)}
+  else{el('rect',{x:-16,y:-50,width:14,height:50,rx:5,fill:LEG,class:'ol',"stroke-width":2.5},i);el('rect',{x:2,y:-50,width:14,height:50,rx:5,fill:LEG,class:'ol',"stroke-width":2.5},i);[-9,9].forEach(x=>el('ellipse',{cx:x,cy:0,rx:10,ry:5,fill:'#3a2a2a'},i))}
+  if(top==='dress')el('path',{d:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',fill:OUT,class:'ol'},i);
+  if(top==='kurta'){el('path',{d:'M-28 -22 Q -28 -96 0 -98 Q 28 -96 28 -22 L 10 -22 L 6 -40 L -6 -40 L -10 -22 Z',fill:OUT,class:'ol'},i);el('path',{d:'M0 -96 v26',stroke:'#ffd34d',"stroke-width":3},i)}
+  if(top==='shirt'){el('path',{d:'M-28 -44 Q -28 -96 0 -98 Q 28 -96 28 -44 Z',fill:OUT,class:'ol'},i);el('path',{d:'M-8 -96 l8 9 l8 -9',fill:'none',stroke:'#fff8ea',"stroke-width":3},i)}
   // a cream stall apron with a pocket
   el('path',{d:'M-18 -82 h36 l5 50 h-46 z',fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('rect',{x:-9,y:-62,width:18,height:12,rx:3,fill:'#ffd34d',class:'ol',"stroke-width":2.5},i);
   el('path',{d:'M-18 -92 q18 14 36 0',stroke:'#ffd34d',"stroke-width":8,fill:'none',"stroke-linecap":'round'},i);
@@ -469,15 +473,19 @@ function keeper(i,m){const SKIN=LOOK.skin[m.skin]||LOOK.skin[0],HAIR=LOOK.hair[m
   // the top of the hair, by style
   if(m.style==='long')el('circle',{cx:10,cy:-166,r:15,fill:HAIR,class:'ol',"stroke-width":3},i);
   if(m.style==='curly')[[-22,-152],[0,-160],[22,-152]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:13,fill:HAIR},i));
+  else if(m.style==='side')el('path',{d:'M-34 -124 Q -38 -164 2 -164 Q 38 -162 34 -126 Q 28 -150 -2 -151 Q -16 -150 -22 -140 Q -28 -141 -34 -124 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   else if(m.style==='short')el('path',{d:'M-33 -126 Q -36 -164 0 -164 Q 36 -164 33 -126 Q 24 -146 0 -146 Q -24 -146 -33 -126 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   else el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   if(WINTER){el('path',{d:'M-36 -132 Q -36 -178 0 -178 Q 36 -178 36 -132 Z',fill:'#d02b8f',class:'ol',"stroke-width":3},i);el('rect',{x:-38,y:-142,width:76,height:15,rx:7,fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('circle',{cx:0,cy:-182,r:11,fill:'#fff8ea',class:'ol',"stroke-width":3},i)}
+  else if(m.extra==='cap'){el('path',{d:'M-31 -140 q0 -34 31 -34 q31 0 31 34 z',fill:'#3a3a6e',class:'ol',"stroke-width":3},i);el('rect',{x:-33,y:-152,width:66,height:14,rx:4,fill:'#e3bd00',class:'ol',"stroke-width":2.5},i);for(let k=0;k<4;k++)el('rect',{x:-27+k*15,y:-150,width:8,height:10,rx:2,fill:FUN[k]},i)}
   else if(m.extra==='flower'){for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i)}
   el('ellipse',{cx:-11,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);el('ellipse',{cx:12,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);
   el('circle',{cx:-9,cy:-126,r:1.6,fill:'#fff'},i);el('circle',{cx:14,cy:-126,r:1.6,fill:'#fff'},i);
   if(m.extra==='glasses'){[-11,12].forEach(x=>el('circle',{cx:x,cy:-124,r:10,fill:'none',stroke:'#5b3a2e',"stroke-width":3},i));el('path',{d:'M-1 -125 h2',stroke:'#5b3a2e',"stroke-width":3},i)}
   el('circle',{cx:-19,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);el('circle',{cx:20,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);
-  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i)}
+  if(m.face==='beard')el('path',{d:'M-31 -130 Q -34 -92 0 -90 Q 34 -92 31 -130 Q 24 -106 0 -104 Q -24 -106 -31 -130 Z',fill:HAIR,class:'ol',"stroke-width":2.5},i);
+  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i);
+  if(m.face==='moustache'||m.face==='beard')el('path',{d:'M-14 -112 q7 -7 14 -1 q7 -6 14 1 q-7 5 -14 1 q-7 4 -14 -1 z',fill:HAIR,class:'ol',"stroke-width":2},i)}
 const st2=document.createElement('style');st2.textContent='@keyframes wave{50%{transform:rotate(-24deg)}}';document.head.appendChild(st2);
 const meG=g({transform:`translate(${sx+300} ${sy+120})`});
 function drawMe(){meG.innerHTML='';sh(0,4,34,meG);keeper(g({class:'bob'},meG),ME);
@@ -490,7 +498,7 @@ function showMe(){if(started)return;hush();if(narrow())scrollTo(sx+220);$('#mena
     vals.forEach((v,ix)=>{const b=document.createElement('button');b.type='button';const val=isColour?ix:v;b.setAttribute('aria-pressed',String(ME[key]===val));
       if(isColour){b.className='sw';b.style.background=v;b.setAttribute('aria-label',label+' '+(ix+1))}else{b.className='chip';b.textContent=LOOKNAME[key][v]}
       b.onclick=()=>{ME[key]=val;saveMe();drawMe();sfx('tap');r.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))};r.appendChild(b)});box.appendChild(r)};
-  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('Outfit','outfit',LOOK.outfit,true);row('Extra','extra',LOOK.extra,false);
+  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Face','face',LOOK.face,false);row('Extra','extra',LOOK.extra,false);
   $('#mepanel').classList.add('on');sfx('clink')}
 $('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()});
 $('#medone').onclick=()=>{sfx('tap');$('#mepanel').classList.remove('on');scrollTo(focus());morning()};
