@@ -215,9 +215,12 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DAY={'#day2':2,'#day3':3,'#day4':4}[location.hash]||1,KP=DAY===1?'md-':'md'+DAY+'-',FEST=DAY===2,WINTER=DAY===3,NIGHT=DAY===4;
 const DAYNAME=['','Market Day','Festival day','Winter market','Night market'];
 // the weather changes what people want: rain sells warm things, a blizzard sells hot drinks and woollies
-const WEATHER=WINTER?(Math.random()<.4?'blizzard':'snow'):NIGHT?'clear':(Math.random()<.4?'rain':'sun');
-const WF={};if(WEATHER==='rain'){WF.yak=1.2;WF.cub=1.2;WF.monal=.85;WF.pika=.85}if(WEATHER==='blizzard'){WF.ibex=1.15;WF.partridge=1.15;WF.fox=1.1}
-const WXL={rain:DAY===2?'A light rain at the festival, so warm things will sell well. ':'It’s drizzling, so warm things will sell and fruit may not. ',blizzard:'A proper blizzard today! Hot drinks and woollies will fly. '}[WEATHER]||'';
+const WEATHER=WINTER?(Math.random()<.4?'blizzard':'snow'):NIGHT?'clear':FEST?'sun':(Math.random()<.4?'rain':'sun');
+// some days the weather turns at lunch: rain clears or sets in, snow thickens into a blizzard or eases off
+const WEATHER2=NIGHT||FEST?WEATHER:Math.random()<.4?{rain:'sun',sun:'rain',snow:'blizzard',blizzard:'snow'}[WEATHER]:WEATHER;
+const wfOf=w=>{const f={};if(w==='rain'){f.yak=1.2;f.cub=1.2;f.monal=.85;f.pika=.85}if(w==='blizzard'){f.ibex=1.15;f.partridge=1.15;f.fox=1.1}return f};
+let WXNOW=WEATHER,WF=wfOf(WEATHER);
+const WXL={rain:'It’s drizzling, so warm things will sell and fruit may not. ',blizzard:'A proper blizzard today! Hot drinks and woollies will fly. '}[WEATHER]||'';
 if(DAY>1){document.title=DAYNAME[DAY]+' · Market Day';$('.pill.title b').textContent=DAYNAME[DAY]}
 const NS='http://www.w3.org/2000/svg',W=$('#w');
 const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
@@ -244,7 +247,7 @@ if(WINTER){defs.querySelector('#sky').innerHTML='<stop offset="0" stop-color="#b
   defs.querySelector('#lawn').innerHTML='<rect width="100" height="100" fill="#f4f7fb"/><rect width="50" height="50" fill="#eaf0f6"/><rect x="50" y="50" width="50" height="50" fill="#eaf0f6"/><circle cx="22" cy="28" r="2.5" fill="#d3dfea"/><circle cx="74" cy="78" r="2.5" fill="#d3dfea"/><circle cx="80" cy="20" r="2" fill="#d3dfea"/>'}
 /* ---------- sky, peaks, terraces ---------- */
 el('rect',{x:0,y:0,width:1600,height:300,fill:'url(#sky)'});
-const sun=g({class:'sun'});$('#clock .ic').textContent={rain:'☂',snow:'❄',blizzard:'❄',clear:'☾'}[WEATHER]||'☀';el('circle',{cx:1390,cy:90,r:56,fill:FEST?'#ffb347':'#ffd34d',class:'ol'},sun);
+const sun=g({class:'sun'});el('circle',{cx:1390,cy:90,r:56,fill:FEST?'#ffb347':'#ffd34d',class:'ol'},sun);
 [[180,70],[620,50],[1000,96]].forEach(([x,y],i)=>{const c=g({style:'animation:drift '+(70+i*20)+'s linear infinite;animation-delay:'+(-i*25)+'s'});[[0,0,30],[30,-12,26],[58,0,24],[28,8,28]].forEach(([dx,dy,r])=>el('circle',{cx:x+dx,cy:y+dy,r,fill:FEST?'#ffe6ea':'#fff'},c))});
 const st=document.createElement('style');st.textContent='@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(1800px)}}';document.head.appendChild(st);
 el('path',{d:'M0 250 L120 150 L200 190 L330 80 L430 170 L560 110 L690 200 L820 90 L950 180 L1080 70 L1220 170 L1350 100 L1480 180 L1600 130 L1600 300 L0 300Z',fill:FEST?'#c8b2df':'#b9c6ec',class:'ol'});
@@ -561,6 +564,13 @@ function keeper(i,m){const SKIN=LOOK.skin[m.skin],HAIR=LOOK.hair[m.hair],OUT=LOO
   el('circle',{cx:-19,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);el('circle',{cx:20,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);
   el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i)}
 const st2=document.createElement('style');st2.textContent='@keyframes wave{50%{transform:rotate(-24deg)}}';document.head.appendChild(st2);
+const parG=g({});{const c=sx+316,y0=sy-78,hw=82;
+el('path',{d:`M${c} ${sy+124} L${c} ${y0-80}`,stroke:'#a86b43',"stroke-width":7,"stroke-linecap":'round'},parG);
+el('path',{d:`M${c-hw} ${y0} Q ${c} ${y0-112} ${c+hw} ${y0} Z`,fill:'#fff8ea'},parG);
+[[-hw,-hw/3],[hw/3,hw]].forEach(([a,b])=>el('path',{d:`M${c+a} ${y0} Q ${c+(a+b)/2} ${y0-60} ${c} ${y0-56} Q ${c+(a+b)/2} ${y0-40} ${c+b} ${y0} Z`,fill:'#800020'},parG));
+el('path',{d:`M${c-hw} ${y0} Q ${c} ${y0-112} ${c+hw} ${y0} Z`,fill:'none',class:'ol'},parG);
+let sc2='';for(let k=0;k<6;k++)sc2+=`M${c-hw+k*hw/3} ${y0} q${hw/6} 14 ${hw/3} 0 `;el('path',{d:sc2,fill:'#800020',class:'ol',"stroke-width":3},parG);
+el('circle',{cx:c,cy:y0-58,r:6,fill:'#e3bd00',class:'ol',"stroke-width":2},parG)}parG.style.display='none';
 const meG=g({transform:`translate(${sx+300} ${sy+120})`});
 function drawMe(){meG.innerHTML='';sh(0,4,34,meG);keeper(g({class:'bob'},meG),ME);
   const pv=$('#meprev');if(pv){pv.innerHTML='';keeper(g({},pv),ME)}
@@ -715,14 +725,23 @@ function wear(p,key,buy){const f=FIT[key];if(!f||!buy)return;const n=buy.toLower
   else if(/rug/.test(n))el('rect',{x:bx+4,y:by-46,width:26,height:24,rx:12,fill:'#c0392b',class:'ol',"stroke-width":2.5},it);
   else{if(/chai|kahwa/.test(n))el('rect',{x:bx+6,y:by-38,width:14,height:16,rx:3,fill:'#fff8ea',class:'ol',"stroke-width":2},it);if(/walnut|almond/.test(n))[[22,-28],[28,-35]].forEach(([dx,dy])=>el('circle',{cx:bx+dx,cy:by+dy,r:6,fill:/almond/.test(n)?'#c98a5a':'#a0703c',class:'ol',"stroke-width":2},it))}
   el('path',{d:`M${bx} ${by-24} h34 l-3 36 h-28 z`,fill:'#d9b77a',class:'ol',"stroke-width":3},gp);el('path',{d:`M${bx+6} ${by-12} h22`,stroke:'#a86b43',"stroke-width":2,"stroke-dasharray":'3 3'},gp)}
-function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);outfit(inner,key);
+const UMB=['#2f5bff','#e8336d','#00a36c','#7a3cff','#ff7a45','#00a9bd','#e3bd00'];
+function umbrella(p,key){const f=FIT[key]||{sw:40},hx=-f.sw-4,cx=-58,cy=-172,c=UMB[Object.keys(CAST).indexOf(key)%UMB.length];
+  el('path',{d:`M${hx} -46 q-4 -4 0 -8 L${cx+6} ${cy}`,fill:'none',stroke:'#5b3a2e',"stroke-width":3.5,"stroke-linecap":'round'},p);
+  let d=`M${cx-44} ${cy} Q ${cx} ${cy-58} ${cx+44} ${cy}`;for(let k=0;k<4;k++)d+=' q-11 -9 -22 0';el('path',{d:d+' Z',fill:c,class:'ol',"stroke-width":3},p);
+  el('path',{d:`M${cx} ${cy-29} Q ${cx-10} ${cy-12} ${cx-22} ${cy} M${cx} ${cy-29} Q ${cx+10} ${cy-12} ${cx+22} ${cy}`,fill:'none',stroke:'#fff8ea',"stroke-width":2,opacity:.7},p);
+  el('circle',{cx,cy:cy-30,r:3.5,fill:'#5b3a2e'},p)}
+function villager(key){const v=CAST[key];const o=g({class:'walker',style:'transform:translate(-160px,800px)'});const inner=g({class:'inner'},o);sh(0,6,40,inner);v.draw(inner);outfit(inner,key);if(WEATHER==='rain'||WEATHER2==='rain'){const um=g({class:'umb'},inner);umbrella(um,key);um.style.display=WXNOW==='rain'?'':'none'}
   const em=g({class:'emote'},o);el('path',{d:'M-28 -230 h56 a14 14 0 0 1 14 14 v20 a14 14 0 0 1 -14 14 h-20 l-8 12 l-8 -12 h-20 a14 14 0 0 1 -14 -14 v-20 a14 14 0 0 1 14 -14z',fill:'#fffdf6',class:'ol',"stroke-width":3.5},em);
   const et=el('text',{x:0,y:-196,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},em);return {key,v,o,em,et,inner}}
 // butterflies and petals for life
 if(!WINTER&&!NIGHT)for(let i=0;i<4;i++){const b=g({class:'bfly',style:'animation-delay:'+(-i*3.5)+'s'});const x=200+i*350,y=520+(i%2)*160;const c=FUN[i*2%FUN.length];
   el('ellipse',{cx:x-8,cy:y,rx:9,ry:12,fill:c,class:'w ol',"stroke-width":2},b);el('ellipse',{cx:x+8,cy:y,rx:9,ry:12,fill:c,class:'w r ol',"stroke-width":2},b);el('rect',{x:x-2,y:y-8,width:4,height:16,rx:2,fill:'#5b3a2e'},b)}
-if(WEATHER==='rain'){sun.style.display='none';el('rect',{x:0,y:0,width:1600,height:330,fill:'#7d8aa0',opacity:.35});for(let i=0;i<90;i++){const x=Math.random()*1800,y=Math.random()*-200;el('path',{d:`M${x} ${y} l-6 26`,class:'rain',style:'animation-delay:'+(-Math.random()*1)+'s;animation-duration:'+(.7+Math.random()*.4)+'s'})}}
-if(WEATHER==='blizzard')for(let i=0;i<60;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2+Math.random()*3.5,class:'snow',style:'animation-delay:'+(-Math.random()*6)+'s;animation-duration:'+(4+Math.random()*3)+'s'});
+const rainG=g({}),blizG=g({});
+if(WEATHER==='rain'||WEATHER2==='rain'){el('rect',{x:0,y:0,width:1600,height:330,fill:'#7d8aa0',opacity:.35},rainG);for(let i=0;i<90;i++){const x=Math.random()*1800,y=Math.random()*-200;el('path',{d:`M${x} ${y} l-6 26`,class:'rain',style:'animation-delay:'+(-Math.random()*1)+'s;animation-duration:'+(.7+Math.random()*.4)+'s'},rainG)}}
+if(WEATHER==='blizzard'||WEATHER2==='blizzard')for(let i=0;i<60;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2+Math.random()*3.5,class:'snow',style:'animation-delay:'+(-Math.random()*6)+'s;animation-duration:'+(4+Math.random()*3)+'s'},blizG);
+function setWX(w){WXNOW=w;WF=wfOf(w);parG.style.display=w==='rain'?'':'none';W.querySelectorAll('.umb').forEach(u=>u.style.display=w==='rain'?'':'none');rainG.style.display=w==='rain'?'':'none';blizG.style.display=w==='blizzard'?'':'none';if(!NIGHT)sun.style.display=w==='rain'?'none':'';$('#clock .ic').textContent={rain:'☂',snow:'❄',blizzard:'❄',clear:'☾'}[w]||'☀'}
+setWX(WEATHER);
 if(WINTER)for(let i=0;i<46;i++)el('circle',{cx:Math.random()*1700,cy:Math.random()*-100,r:2.5+Math.random()*4,class:'snow',style:'animation-delay:'+(-Math.random()*12)+'s;animation-duration:'+(9+Math.random()*7)+'s'});
 else if(FEST)for(let i=0;i<30;i++)el('rect',{x:Math.random()*1700,y:Math.random()*200,width:9,height:5,fill:FUN[i%FUN.length],class:'conf',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(7+Math.random()*5)+'s'});
 else if(!NIGHT)for(let i=0;i<12;i++)el('ellipse',{cx:Math.random()*1700,cy:Math.random()*200,rx:6,ry:4,class:'petal',style:'animation-delay:'+(-Math.random()*9)+'s;animation-duration:'+(8+Math.random()*5)+'s'});
@@ -800,8 +819,8 @@ function startAmbience(){if(amb||muted||!armed||document.hidden)return;const a=a
   const pop=(vol,freq)=>{const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;const gn=a.createGain(),t=a.currentTime;gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.0001,t+.12);s.connect(f).connect(gn).connect(out);s.start(t,Math.random()*3,.15)};
   const every=(ms,fn)=>{const t=()=>{if(!amb)return;try{fn()}catch(e){}amb.timers.push(setTimeout(t,ms*(.6+Math.random()*.8)))};amb.timers.push(setTimeout(t,ms*Math.random()))};
   const dusk=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dusk'))||0;
-  if(WEATHER==='rain')bed('highpass',2600,.4,.035,[.2,.008]);                  // rain pattering
-  if(WEATHER==='blizzard')bed('lowpass',700,.6,.05,[.18,320],true);              // a stronger wind
+  if(WXNOW==='rain')bed('highpass',2600,.4,.035,[.2,.008]);                  // rain pattering
+  if(WXNOW==='blizzard')bed('lowpass',700,.6,.05,[.18,320],true);              // a stronger wind
   if(NIGHT){
     bed('bandpass',650,.6,.035,[.13,.01]);                        // the river, softer at night
     every(380,()=>{if(Math.random()<.35)return;const f=4200+Math.random()*600;for(let k=0;k<3;k++)ping(f,.04,{vol:.012,at:k*.06})}); // crickets
@@ -971,13 +990,13 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
     return no(`${RS(L)} for ${T.word}? That sounds like a lot.`,why,`A round price felt expensive to Gus, so his limit was ${RS(lo)}. Turn on “End prices in 9” and he’d pay ${RS(hi)}.`)}}
 // the best day possible with today's stock and today's villagers: try every sensible mix of prices, signs, tray and bundle.
 // It runs in small slices in the background during the morning, so the game never stalls.
-const snap=()=>({p:Object.assign({},PRICE),sign,tray,charm,bundle,log,mirror});
-function unsnap(k){Object.keys(PRICE).forEach(x=>delete PRICE[x]);Object.assign(PRICE,k.p);sign=k.sign;tray=k.tray;charm=k.charm;bundle=k.bundle;log=k.log;mirror=k.mirror}
+const snap=()=>({p:Object.assign({},PRICE),sign,tray,charm,bundle,log,mirror,WF});
+function unsnap(k){Object.keys(PRICE).forEach(x=>delete PRICE[x]);Object.assign(PRICE,k.p);sign=k.sign;tray=k.tray;charm=k.charm;bundle=k.bundle;log=k.log;mirror=k.mirror;WF=k.WF}
 function* bestGen(){const u=a=>[...new Set(a.map(v=>Math.min(2000,Math.max(10,v))))],B=[false,true];let best=0,n=0;
   const runN=(p,s1,s2,m1,m2)=>{Object.assign(PRICE,p);charm=false;log=[];let tot=0;
     order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;sign=am?s1:s2;mirror=am?m1:m2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(sign===1)tot-=10}});return tot};
   const run=(p,s1,s2,t1,t2,ch,b1,b2)=>{Object.assign(PRICE,p);charm=ch;log=[];let tot=0;
-    order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
+    order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;WF=wfOf(am?WEATHER:WEATHER2);sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
     return tot-(FEST?40*((t1?1:0)+(t2?1:0)):0)};
   if(NIGHT){const bg=u([LM('leopardcat',200),LM('leopardcat',400),LM('monal',180),LM('monal',300),2000]);
     for(const large of u([LM('owl',300),LM('owl',600),2000]))for(const bangles of bg)for(const jalebi of u([LM('squirrel',110),LM('squirrel',220),2000]))for(const momos of u([LM('bear',160),LM('bear',300),2000]))
@@ -1015,8 +1034,10 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
   const cast=order.map(villager);let i=0;
   // lunchtime: one chance to change things for the afternoon shoppers
   function lunch(){lunched=true;paused=true;sfx('bell');h=NIGHT?20:13;m=NIGHT?30:0;clock(h,m);open=false;
+    const turn=WEATHER2!==WEATHER?{'sun>rain':'Clouds are rolling in, so it’ll rain this afternoon and warm things will sell. ','rain>sun':'The rain has stopped and the sun’s out, so fruit will sell again. ','snow>blizzard':'The snow’s getting heavier: a blizzard is coming, and hot drinks and woollies will fly. ','blizzard>snow':'The blizzard is easing off into gentle snow. '}[WEATHER+'>'+WEATHER2]:'';
+    if(turn){setWX(WEATHER2);if(amb){stopAmbience();setTimeout(startAmbience,600)}}
     const sold=log.filter(l=>l.buy).length,aft=order.slice(3).filter(k=>k!==VISITOR).map(k=>CAST[k].name).join(' and ');
-    talk('Riya','#800020','#fff8ea',(NIGHT?'Break time! ':'Lunch break! ')+sold+' of 3 bought this '+(NIGHT?'evening':'morning')+'. '+aft+(NIGHT?' come by later tonight. ':' come by this afternoon. ')+(NIGHT?'Want to change the sign or the mirror?':FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
+    talk('Riya','#800020','#fff8ea',(NIGHT?'Break time! ':'Lunch break! ')+turn+sold+' of 3 bought this '+(NIGHT?'evening':'morning')+'. '+aft+(NIGHT?' come by later tonight. ':' come by this afternoon. ')+(NIGHT?'Want to change the sign or the mirror?':FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
       {t:DAY>1?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',NIGHT?'Tap the chalkboard or the mirror to change them, then head back.':FEST?'Tap the chalkboard or the tasting tray to change them, then head back.':WINTER?'Tap the chalkboard or the bundle basket to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
       {t:'Keep it',soft:true,fn:resume}])}
   function resume(){open=true;paused=false;tapme.style.display='none';hush();scrollTo(sx);if(sign!==morningSign)toast('Afternoon sign: “'+SIGNS[sign].t.join(' ')+'”');
@@ -1050,7 +1071,7 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
     (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>Books for village children</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
-  const wxNote={rain:' · Rain',blizzard:' · Blizzard'}[WEATHER]||'';
+  const wxN={rain:'Rain',sun:'Sun',snow:'Snow',blizzard:'Blizzard'},wxNote=WEATHER2!==WEATHER?' · '+wxN[WEATHER]+', then '+wxN[WEATHER2].toLowerCase():({rain:' · Rain',blizzard:' · Blizzard'}[WEATHER]||'');
   const trayNote=NIGHT?' · Mirror: '+(morningMirror&&mirror?'out all evening':morningMirror?'early only':mirror?'late only':'covered'):WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):(NIGHT?'Early: ':'Morning: ')+said(morningSign)+(NIGHT?' · Late: ':' · Afternoon: ')+said(sign))+trayNote+wxNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
   $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>reboot()]].concat([1,2,3,4].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
@@ -1170,7 +1191,7 @@ function postFront(){const f=W.cloneNode(true);f.removeAttribute('class');f.remo
   f.querySelectorAll('text').forEach(t=>{if(['tap!','Free taste?','Bundle?'].includes(t.textContent))t.parentNode.remove()});
   // everyone who bought from you poses in front of the stall
   const buyers=log.filter(l=>l.buy),row=g({},f),gap=128,x0=720-(buyers.length-1)*gap/2;
-  buyers.forEach((l,i)=>{const v=g({transform:`translate(${x0+i*gap} ${856+(i%2)*10}) scale(.82)`},row);sh(0,6,40,v);CAST[l.key].draw(v);outfit(v,l.key);wear(v,l.key,l.buy)});
+  buyers.forEach((l,i)=>{const v=g({transform:`translate(${x0+i*gap} ${856+(i%2)*10}) scale(.82)`},row);sh(0,6,40,v);CAST[l.key].draw(v);outfit(v,l.key);wear(v,l.key,l.buy);if(WXNOW==='rain')umbrella(v,l.key)});
   // greetings from…
   const bn=g({},f),bx0=PV.x+28,by0=PV.y+26;el('rect',{x:bx0,y:by0,width:430,height:104,rx:24,fill:'#fffaf0',class:'ol'},bn);
   el('text',{x:bx0+26,y:by0+40,style:'font:500 24px Fredoka,sans-serif;fill:#9a7b62'},bn).textContent='Greetings from the';
@@ -1259,7 +1280,7 @@ __teardown=()=>{alive=false;CTRL.abort();clearInterval(typing);clearTimeout(tt);
 // arriving from another day: you already tapped, so the day's sounds start straight away
 if(warm){armed=true;startAmbience()}
 }
-function reboot(){if(__teardown)__teardown();document.getElementById('w').innerHTML='';
+function reboot(){if(__teardown)__teardown();document.getElementById('w').innerHTML='';document.getElementById('acts').innerHTML='';document.getElementById('say').textContent='';document.getElementById('talk').classList.add('hide');
   ['ledger','post','stk','prices','mepanel','toast'].forEach(id=>document.getElementById(id).classList.remove('on'));
   document.documentElement.style.setProperty('--dusk',0);document.getElementById('money').textContent='0';document.querySelector('.pill.title b').textContent='Market Day';document.title='Market Day';
   boot(true)}
