@@ -495,16 +495,21 @@ drawBundle();
 const toggleBundle=()=>{if(open||!WINTER)return;bundle=!bundle;drawBundle();sfx('clink');toast(bundle?'Bundle on: '+HOT.word+' + '+NUTS.word+' for ₹'+cost('bundle'):'No bundle today')};
 drawTray();
 const toggleTray=()=>{if(open||DAY!==2)return;tray=!tray;drawTray();sfx('clink');toast(tray?'Free tastes are out (₹40 of honey each half-day)':'The tray is covered')};
-// night: a mirror to try things on
+// night: a gift-wrap station (the code still calls it `mirror`)
 let mirror=false;const mrOn=g({},TR),mrOff=g({},TR);
-[mrOn,mrOff].forEach(p=>el('rect',{x:trx-3,y:trY-104,width:6,height:42,fill:'#a86b43',class:'ol',"stroke-width":2},p));
-el('ellipse',{cx:trx,cy:trY-124,rx:24,ry:30,fill:'#e3bd00',class:'ol',"stroke-width":3},mrOn);el('ellipse',{cx:trx,cy:trY-124,rx:18,ry:24,fill:'#cfe9ff'},mrOn);el('path',{d:`M${trx-9} ${trY-138} l10 -7`,stroke:'#fff',"stroke-width":3,"stroke-linecap":'round'},mrOn);
-el('rect',{x:trx-46,y:trY-180,width:92,height:26,rx:13,fill:'#ffd34d',class:'ol',"stroke-width":3},mrOn);el('text',{x:trx,y:trY-161,"text-anchor":'middle',style:'font:700 14px Fredoka,sans-serif;fill:#5b3a2e'},mrOn).textContent='Try it on!';
-el('path',{d:`M${trx-27} ${trY-96} q27 -66 54 0 z`,fill:'#7a3cff',class:'ol',"stroke-width":3},mrOff);
-const mrTap=g({class:'bob'},mrOff);el('rect',{x:trx-42,y:trY-176,width:84,height:26,rx:13,fill:'#fff8ea',class:'ol',"stroke-width":3},mrTap);el('text',{x:trx,y:trY-157,"text-anchor":'middle',style:'font:700 14px Fredoka,sans-serif;fill:#5b3a2e'},mrTap).textContent='Mirror?';
+// out: wrapped presents with bows and a roll of patterned paper
+el('rect',{x:trx-34,y:trY-96,width:30,height:26,rx:3,fill:'#e8336d',class:'ol',"stroke-width":2.5},mrOn);el('path',{d:`M${trx-19} ${trY-96} v26 M${trx-34} ${trY-83} h30`,stroke:'#ffd34d',"stroke-width":3},mrOn);
+el('path',{d:`M${trx-19} ${trY-96} q-8 -10 -12 -2 q4 4 12 2 q8 -10 12 -2 q-4 4 -12 2`,fill:'#ffd34d',class:'ol',"stroke-width":1.5},mrOn);
+el('rect',{x:trx+2,y:trY-110,width:26,height:40,rx:3,fill:'#2f5bff',class:'ol',"stroke-width":2.5},mrOn);el('path',{d:`M${trx+15} ${trY-110} v40 M${trx+2} ${trY-92} h26`,stroke:'#fff8ea',"stroke-width":3},mrOn);
+el('path',{d:`M${trx+15} ${trY-110} q-8 -10 -12 -2 q4 4 12 2 q8 -10 12 -2 q-4 4 -12 2`,fill:'#fff8ea',class:'ol',"stroke-width":1.5},mrOn);
+el('rect',{x:trx-40,y:trY-72,width:80,height:10,rx:5,fill:'#7a3cff',class:'ol',"stroke-width":2},mrOn);for(let k=0;k<6;k++)el('circle',{cx:trx-32+k*13,cy:trY-67,r:2,fill:'#ffd34d'},mrOn);
+el('rect',{x:trx-46,y:trY-146,width:92,height:26,rx:13,fill:'#ffd34d',class:'ol',"stroke-width":3},mrOn);el('text',{x:trx,y:trY-127,"text-anchor":'middle',style:'font:700 14px Fredoka,sans-serif;fill:#5b3a2e'},mrOn).textContent='Gift wrap!';
+// put away: just an empty little basket
+el('path',{d:`M${trx-32} ${trY-74} h64 l-7 12 h-50 z`,fill:'#c98a5a',class:'ol',"stroke-width":2.5},mrOff);
+const mrTap=g({class:'bob'},mrOff);el('rect',{x:trx-46,y:trY-120,width:92,height:26,rx:13,fill:'#fff8ea',class:'ol',"stroke-width":3},mrTap);el('text',{x:trx,y:trY-101,"text-anchor":'middle',style:'font:700 14px Fredoka,sans-serif;fill:#5b3a2e'},mrTap).textContent='Gift wrap?';
 function drawMirror(){mrOn.style.display=NIGHT&&mirror?'':'none';mrOff.style.display=NIGHT&&!mirror?'':'none'}
-drawMirror();if(NIGHT)TR.setAttribute('aria-label','The mirror. Tap to let shoppers try things on, or cover it.');
-const toggleMirror=()=>{if(open||!NIGHT)return;mirror=!mirror;drawMirror();sfx('clink');toast(mirror?'The mirror is out: shoppers can try things on':'The mirror is covered')};
+drawMirror();if(NIGHT)TR.setAttribute('aria-label','The gift-wrap station. Tap to offer gift wrapping, or put it away.');
+const toggleMirror=()=>{if(open||!NIGHT)return;mirror=!mirror;drawMirror();sfx('clink');toast(mirror?'Gift wrapping on offer (₹15 of paper and ribbon per sale)':'Gift wrapping put away')};
 const useStool=()=>NIGHT?toggleMirror():WINTER?toggleBundle():toggleTray();
 TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();useStool()}});
 
@@ -884,7 +889,7 @@ const hush=()=>talkEl.classList.add('hide');
 const toastEl=$('#toast');let tt;function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),1800)}
 let money=0;function earn(n,x,y){money+=n;sfx('coin');$('#money').textContent=money;const pu=$('#purse');pu.classList.remove('bump');void pu.offsetWidth;pu.classList.add('bump');
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin'});c.textContent='+₹'+n;setTimeout(()=>c.remove(),1500)}
-const costs={tastes:0,school:0,sparkler:0};function spend(n,x,y,kind){money-=n;costs[kind||'tastes']+=n;sfx('spend');$('#money').textContent=money;
+const costs={tastes:0,school:0,sparkler:0,wrap:0};function spend(n,x,y,kind){money-=n;costs[kind||'tastes']+=n;sfx('spend');$('#money').textContent=money;
   const c=el('text',{x,y,"text-anchor":'middle',class:'coin',style:'fill:#ff8a8a'});c.textContent='−₹'+n;setTimeout(()=>c.remove(),1500)}
 function clock(h,m){$('#time').textContent=((h+11)%12+1)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');sun.style.transform='translate('+(-(h-9)*80)+'px,'+(Math.max(0,h-13)*26)+'px)'}
 
@@ -911,11 +916,11 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
       if(s===1)return no(`Even with a sparkler, ${RS(L)} is a lot.`,why,`The free gift tempted him, but not past ${RS(hi)}.`);
       if(L<=lo)return yes('large',`A big lantern for ${RS(L)}. Lovely.`,why,`He bought because it was cheap. “Free sparkler with lanterns” would have let you charge up to ${RS(hi)}.`);
       return no('Pretty lanterns. Not tonight.',why,`A little free extra would have tipped him. With “Free sparkler with lanterns” he’d pay up to ${RS(hi)}.`)}
-    if(key==='leopardcat'){const b=C('bangles'),hi=LM('leopardcat',400),lo=LM('leopardcat',200),w=SHINE.word,why='Endowment';
-      if(mirror&&b<=hi)return yes('bangles',`Oh, they look like mine already. I’m keeping them!`,why,`Once Mae tried the ${w} on in the mirror, they felt like hers. With the mirror out she pays up to ${RS(hi)}.`);
-      if(mirror)return no(`They suit me… but ${RS(b)}?`,why,`Trying them on won her over, but not past ${RS(hi)}.`);
-      if(b<=lo)return yes('bangles',`${cap1(w)} for ${RS(b)}? Sure.`,why,`She bought because they were cheap. With the mirror out, she’d have paid up to ${RS(hi)}.`);
-      return no(`Nice ${w}, I suppose. Not tonight.`,why,`She never got to try them on. Put the mirror out and she’d pay up to ${RS(hi)}.`)}
+    if(key==='leopardcat'){const b=C('bangles'),hi=LM('leopardcat',400),lo=LM('leopardcat',200),w=SHINE.word,why='Packaging';
+      if(mirror&&b<=hi)return yes('bangles',`Could you gift-wrap them? They’re for my sister!`,why,`Pretty wrapping made the ${w} feel like a real present. With gift wrap on offer, Mae pays up to ${RS(hi)}.`);
+      if(mirror)return no(`Lovely wrapping… but ${RS(b)}?`,why,`The gift wrap won her over, but not past ${RS(hi)}.`);
+      if(b<=lo)return yes('bangles',`${cap1(w)} for ${RS(b)}? Sure.`,why,`She bought because they were cheap. With gift wrap on offer, she’d have paid up to ${RS(hi)}.`);
+      return no(`They’re a present… I wish I could wrap them.`,why,`She wanted them to look like a present. Offer gift wrap and she’d pay up to ${RS(hi)}.`)}
     if(key==='squirrel'){const j=C('jalebi'),hi=LM('squirrel',220),lo=LM('squirrel',110),w=SWEETS.word,why='Urgency';
       if(s===2&&j<=hi)return yes('jalebi','Closing at ten?! Quick, I’ll take them now!',why,`A deadline turned “maybe later” into “now”. With “Closing at 10” Finn pays up to ${RS(hi)}.`);
       if(s===2)return no(`I’d better hurry… but ${RS(j)}? No.`,why,`The deadline hurried him, but not past ${RS(hi)}.`);
@@ -925,7 +930,7 @@ function decide(key){const s=sign,buyers=log.filter(l=>l.buy).map(l=>CAST[l.key]
       if(mo<=lim)return yes('momos',D2.bear?`Wide awake for once, and here for your ${w}!`:`${cap1(w)} for ${RS(mo)}. Fine.`,why,D2.bear?`Gus bought from you on Festival day, so he trusts you: up to ${RS(lim)}.`:`He paid what he’d pay any stall, up to ${RS(lim)}. Win him on Festival day and he’d trust you with more.`);
       return no(`${RS(mo)} for ${w}? Too much for me.`,why,`His limit was ${RS(lim)}. `+(D2.bear?'':'Win him on Festival day and he’d trust you with more.'))}
     if(key==='monal'){const b=C('bangles'),lim=D1.monal?LM('monal',300):LM('monal',180),w=SHINE.word;
-      if(mirror)return no('Ooh, look at my feathers in this mirror… what was I buying?','Distraction','Juno spent so long admiring herself in the mirror that she forgot to buy. Cover the mirror at the break, before she comes.');
+      if(mirror)return no('A queue for gift wrapping? I can’t wait, I’ll come back.','Waiting','Juno saw everyone waiting for gift wrap and left. Put the wrapping away at the break, before she comes.');
       if(b<=lim)return yes('bangles',D1.monal?`I came back for you! The ${w}, please.`:`${cap1(w)} for ${RS(b)}? So shiny!`,'Loyalty',D1.monal?`Juno bought from you on the first day, so she trusts you: up to ${RS(lim)}.`:`She paid what she’d pay any stall, up to ${RS(lim)}. Win her on Day 1 and she’d trust you with more.`);
       return no(`${RS(b)}? Too dear for me.`,'Loyalty',`Her limit was ${RS(lim)}. `+(D1.monal?'':'Win her on Day 1 and she’d trust you with more.'))}}
   if(WINTER){
@@ -1000,7 +1005,7 @@ const snap=()=>({p:Object.assign({},PRICE),sign,tray,charm,bundle,log,mirror,WF}
 function unsnap(k){Object.keys(PRICE).forEach(x=>delete PRICE[x]);Object.assign(PRICE,k.p);sign=k.sign;tray=k.tray;charm=k.charm;bundle=k.bundle;log=k.log;mirror=k.mirror;WF=k.WF}
 function* bestGen(){const u=a=>[...new Set(a.map(v=>Math.min(2000,Math.max(10,v))))],B=[false,true];let best=0,n=0;
   const runN=(p,s1,s2,m1,m2)=>{Object.assign(PRICE,p);charm=false;log=[];let tot=0;
-    order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;sign=am?s1:s2;mirror=am?m1:m2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(sign===1)tot-=10}});return tot};
+    order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;sign=am?s1:s2;mirror=am?m1:m2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(sign===1)tot-=10;if(mirror)tot-=15}});return tot};
   const run=(p,s1,s2,t1,t2,ch,b1,b2)=>{Object.assign(PRICE,p);charm=ch;log=[];let tot=0;
     order.filter(k=>k!==VISITOR).forEach((k,i)=>{const am=i<3;WF=wfOf(am?WEATHER:WEATHER2);sign=am?s1:s2;tray=am?t1:t2;bundle=am?b1:b2;const d=decide(k);log.push({key:k,buy:d.buy});if(d.buy){tot+=d.n;if(WINTER&&sign===2)tot-=10}});
     return tot-(FEST?40*((t1?1:0)+(t2?1:0)):0)};
@@ -1043,8 +1048,8 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
     const turn=WEATHER2!==WEATHER?{'sun>rain':'Clouds are rolling in, so it’ll rain this afternoon and warm things will sell. ','rain>sun':'The rain has stopped and the sun’s out, so fruit will sell again. ','snow>blizzard':'The snow’s getting heavier: a blizzard is coming, and hot drinks and woollies will fly. ','blizzard>snow':'The blizzard is easing off into gentle snow. '}[WEATHER+'>'+WEATHER2]:'';
     if(turn){setWX(WEATHER2);if(amb){stopAmbience();setTimeout(startAmbience,600)}}
     const sold=log.filter(l=>l.buy).length,aft=order.slice(3).filter(k=>k!==VISITOR).map(k=>CAST[k].name).join(' and ');
-    talk('Riya','#800020','#fff8ea',(NIGHT?'Break time! ':'Lunch break! ')+turn+sold+' of 3 bought this '+(NIGHT?'evening':'morning')+'. '+aft+(NIGHT?' come by later tonight. ':' come by this afternoon. ')+(NIGHT?'Want to change the sign or the mirror?':FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
-      {t:DAY>1?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',NIGHT?'Tap the chalkboard or the mirror to change them, then head back.':FEST?'Tap the chalkboard or the tasting tray to change them, then head back.':WINTER?'Tap the chalkboard or the bundle basket to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
+    talk('Riya','#800020','#fff8ea',(NIGHT?'Break time! ':'Lunch break! ')+turn+sold+' of 3 bought this '+(NIGHT?'evening':'morning')+'. '+aft+(NIGHT?' come by later tonight. ':' come by this afternoon. ')+(NIGHT?'Want to change the sign or the gift wrap?':FEST?'Want to change the sign or the tasting tray?':WINTER?'Want to change the sign or the bundle?':'Want to change the sign for them?'),[
+      {t:DAY>1?'Change things':'Change the sign',fn:()=>{tapme.style.display='';if(narrow())scrollTo(bx+60);talk('Riya','#800020','#fff8ea',NIGHT?'Tap the chalkboard or the gift-wrap basket to change them, then head back.':FEST?'Tap the chalkboard or the tasting tray to change them, then head back.':WINTER?'Tap the chalkboard or the bundle basket to change them, then head back.':'Tap the chalkboard until it says what you want, then head back.',[{t:'Back to work',fn:resume}])}},
       {t:'Keep it',soft:true,fn:resume}])}
   function resume(){open=true;paused=false;tapme.style.display='none';hush();scrollTo(sx);if(sign!==morningSign)toast('Afternoon sign: “'+SIGNS[sign].t.join(' ')+'”');
     if(tray)setTimeout(()=>spend(40,trx,trY-150),300);setTimeout(nextOne,600)}
@@ -1055,7 +1060,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
     setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);wear(v.inner,v.key,d.buy);befriend(v.key);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600);if(NIGHT&&sign===1)setTimeout(()=>spend(10,sx-60,sy-40,'sparkler'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);wear(v.inner,v.key,d.buy);befriend(v.key);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600);if(NIGHT&&sign===1)setTimeout(()=>spend(10,sx-60,sy-40,'sparkler'),600);if(NIGHT&&mirror)setTimeout(()=>spend(15,sx-60,sy-70,'wrap'),900)}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
@@ -1073,12 +1078,13 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
   try{if(DAY===1)localStorage.setItem('md-d1',JSON.stringify({goat:won('goat'),panda:won('panda'),yak:won('yak'),monal:won('monal')}));if(FEST)localStorage.setItem('md-d2',JSON.stringify({cub:won('cub'),bear:won('bear')}))}catch(e){}
   $('#lp').innerHTML='<small>'+DAYNAME[DAY]+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+' <em class="hts">'+heartStr(l.key)+'</em></b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
     (costs.tastes?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+costs.tastes+'</span></div>':'')+
+    (costs.wrap?'<div class="row"><i style="--c:#e8336d;color:#fff8ea">G</i><b>Gift wrap and ribbon</b><span>−₹'+costs.wrap+'</span></div>':'')+
     (costs.sparkler?'<div class="row"><i style="--c:#ffb347;color:#5b3a2e">✦</i><b>Sparklers given away</b><span>−₹'+costs.sparkler+'</span></div>':'')+
     (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>Books for village children</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const wxN={rain:'Rain',sun:'Sun',snow:'Snow',blizzard:'Blizzard'},wxNote=WEATHER2!==WEATHER?' · '+wxN[WEATHER]+', then '+wxN[WEATHER2].toLowerCase():({rain:' · Rain',blizzard:' · Blizzard'}[WEATHER]||'');
-  const trayNote=NIGHT?' · Mirror: '+(morningMirror&&mirror?'out all evening':morningMirror?'early only':mirror?'late only':'covered'):WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
+  const trayNote=NIGHT?' · Gift wrap: '+(morningMirror&&mirror?'all evening':morningMirror?'early only':mirror?'late only':'none'):WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):(NIGHT?'Early: ':'Morning: ')+said(morningSign)+(NIGHT?' · Late: ':' · Afternoon: ')+said(sign))+trayNote+wxNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
   $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>reboot()]].concat([1,2,3,4].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
@@ -1087,7 +1093,7 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
   const ns=newStk.map(k=>STICKERS.find(x=>x.k===k).t),gifts=newGifts.map(k=>CAST[k].name+' gave you '+GIFTS[k]);
   $('#sum').textContent=(gifts.length?gifts.join(', ')+'! ':'')+(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(main>=BEST_DAY?'Everyone bought, at the most they’d pay. The best day there is!'
     :n===N?'All '+N+' villagers bought something today. Could they have paid a little more?'
-    :NIGHT?n+' of '+N+' villagers bought something tonight. Ollie answers to a free gift, Mae to the mirror, Finn to a deadline, and Gus and Juno to how earlier days went.'
+    :NIGHT?n+' of '+N+' villagers bought something tonight. Ollie answers to a free gift, Mae to gift wrap, Finn to a deadline, and Gus and Juno to how earlier days went.'
     :WINTER?n+' of '+N+' villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
     :DAY===2?n+' of '+N+' villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
     :n+' of '+N+' villagers bought something today. Pip and Kiko answer to your prices; the other three to your sign and prices.')+
@@ -1109,12 +1115,12 @@ const STICKERS=[
   {k:'A good cause',t:'Doing good',d:'People pay more when it helps someone',who:'partridge',day:3},
   {k:'Framing',t:'Worth it over time',d:'A big price feels small spread over years',who:'fox',day:3},
   {k:'Free gift',t:'A little extra',d:'A free gift makes the main thing feel like more',who:'owl',day:4},
-  {k:'Endowment',t:'Try it on',d:'Once it’s in your hands, it feels like yours',who:'leopardcat',day:4},
+  {k:'Packaging',t:'Wrapped with care',d:'Nice wrapping makes the same thing feel more special',who:'leopardcat',day:4},
   {k:'Urgency',t:'Closing soon',d:'A deadline turns “maybe later” into “now”',who:'squirrel',day:4}];
-let STK=[],newStk=[];try{STK=JSON.parse(localStorage.getItem('md-stickers')||'[]')||[]}catch(e){}
+let STK=[],newStk=[];try{STK=(JSON.parse(localStorage.getItem('md-stickers')||'[]')||[]).filter(k=>STICKERS.some(x=>x.k===k))}catch(e){}
 // which nudge, if any, made this sale happen
 function stickerFor(key,d){if(!d.buy||key===VISITOR)return null;const s=sign;
-  if(NIGHT)return {owl:s===1?'Free gift':null,leopardcat:mirror?'Endowment':null,squirrel:s===2?'Urgency':null,bear:D2.bear?'Loyalty':null,monal:D1.monal?'Loyalty':null}[key]||null;
+  if(NIGHT)return {owl:s===1?'Free gift':null,leopardcat:mirror?'Packaging':null,squirrel:s===2?'Urgency':null,bear:D2.bear?'Loyalty':null,monal:D1.monal?'Loyalty':null}[key]||null;
   if(key==='goat'){if(DAY===2&&D1.goat)return 'Loyalty';return d.buy===ITEMS.medium.name&&PRICE.large>=2*PRICE.medium?'The decoy effect':null}
   if(key==='monal')return s===1?'Scarcity':null;
   if(key==='pika')return 'Social proof';
@@ -1206,7 +1212,7 @@ function postFront(){const f=W.cloneNode(true);f.removeAttribute('class');f.remo
 // what worked, in everyday words rather than marketing terms
 const PLAIN={'The decoy effect':'a big size that made the medium one look cheap','Scarcity':'saying only 3 were left','Social proof':'letting them see others buying','Anchoring':'a pricey piece beside a cheaper one',
   'Where it comes from':'saying it was made in the hills','Loyalty':'old customers coming back','Reciprocity':'free tastes','Loss aversion':'calling it the last day of the season',
-  'Charm pricing':'prices ending in 9','Free gift':'a free sparkler with every lantern','Endowment':'letting them try things on','Urgency':'saying we closed at ten','Bundling':'a bundle of two things','A good cause':'giving a child a book with each sale','Framing':'shawls that last 10 winters'};
+  'Charm pricing':'prices ending in 9','Free gift':'a free sparkler with every lantern','Packaging':'offering gift wrap','Urgency':'saying we closed at ten','Bundling':'a bundle of two things','A good cause':'giving a child a book with each sale','Framing':'shawls that last 10 winters'};
 function wrapText(t,n){const w=t.split(' '),out=[];let line='';w.forEach(x=>{if((line+' '+x).trim().length>n){out.push(line.trim());line=x}else line+=' '+x});if(line.trim())out.push(line.trim());return out}
 function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('viewBox','0 0 1005 670');b.setAttribute('aria-hidden','true');
   const sold=log.filter(l=>l.buy),best=sold.slice().sort((a,c)=>c.n-a.n)[0];
@@ -1273,7 +1279,7 @@ startBest();
 function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()},mk={t:'Make it yours',soft:true,fn:showMe};
   const other=[1,2,3,4].filter(d=>d!==DAY&&unlocked(d));
   const days=other.length?{t:'Other days',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Which market day?',other.map(d=>({t:DAYNAME[d]+' →',fn:()=>toDay(d)})).concat([{t:'Stay here',soft:true,fn:morning}]))}:null;
-  if(NIGHT)return talk('Riya','#800020','#fff8ea','Good evening! The night market opens at six. Gus is wide awake for once, Juno has dropped by, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out the mirror.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Ollie the owl, Mae the leopard cat and Gus the black bear early on. After the break, Juno the monal and Finn the flying squirrel. Careful: Juno can’t resist a mirror.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
+  if(NIGHT)return talk('Riya','#800020','#fff8ea','Good evening! The night market opens at six. Gus is wide awake for once, Juno has dropped by, and three new faces are coming. Set the prices, choose the sign, and decide whether to offer gift wrapping.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Ollie the owl, Mae the leopard cat and Gus the black bear early on. After the break, Juno the monal and Finn the flying squirrel. Careful: Juno hates waiting in a queue.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
   if(WINTER)return talk('Riya','#800020','#fff8ea',WXL+'Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
   if(DAY===2)return talk('Riya','#800020','#fff8ea',WXL+'Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
   const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
