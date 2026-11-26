@@ -136,7 +136,15 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .book .acts{flex:none;display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 .prices{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:45;width:min(440px,calc(100% - 20px));max-height:calc(100vh - 90px);overflow:auto;background:var(--paper);border-radius:28px;padding:18px 20px 16px;box-shadow:0 0 0 5px var(--ink),0 10px 0 5px #0000001f;display:none}
 .prices.on{display:block;animation:open .45s var(--spring)}
-@media (min-width:1000px){.prices{left:auto;right:20px;translate:none;width:400px}}
+@media (min-width:1000px){.prices{left:auto;right:20px;translate:none;width:400px}.mepanel{right:auto;left:20px}}
+#meprev{float:right;width:76px;height:132px;margin:-6px -4px 0 8px;background:#eaf6df;border-radius:16px;box-shadow:0 0 0 3px #e0c89e}
+.mepanel label{display:block;font:600 14px var(--font);color:#9a7b62;margin:10px 0 4px}
+.mepanel input{width:100%;font:600 18px var(--font);color:var(--b);background:#fff;border:0;border-radius:14px;padding:9px 14px;box-shadow:0 0 0 3px var(--ink) inset}
+.swrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.sw{width:32px;height:32px;border-radius:50%;border:0;box-shadow:0 0 0 3px #fff8ea,0 0 0 5px #c9b8a0;cursor:pointer}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 3px #fff8ea,0 0 0 6px var(--b)}
+.chip{border:0;border-radius:999px;padding:7px 13px;font:600 14px var(--font);background:#e9dccb;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--honey);box-shadow:0 0 0 2px var(--ink) inset}
 .prices h3{font:700 24px var(--font);color:var(--b)}
 .prices>small{display:block;font:500 15px/1.35 var(--font);color:#9a7b62;margin:2px 0 8px}
 .prow{display:grid;grid-template-columns:1fr auto 70px auto;gap:8px;align-items:center;padding:6px 8px;border-bottom:2px dashed #e0c89e;border-radius:12px;transition:background .4s}
@@ -177,6 +185,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 <div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span><button class="pill" id="stkp" type="button" aria-label="Sticker book"><span class="ic">★</span><span id="stkn">0/12</span></button></div>
 <div class="hud r"><button class="pill snd" id="snd" type="button" aria-pressed="true" aria-label="Sound"><span class="ic">♪</span><span id="sndtx">On</span></button><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
 <div class="prices" id="prices" role="dialog" aria-label="Price tags"><h3>Price tags</h3><small>Every villager has a limit. The right sign, or the right price beside it, can stretch it.</small><div id="plist"></div><button class="btn" id="pdone" type="button">Done</button></div>
+<div class="prices mepanel" id="mepanel" role="dialog" aria-label="Make the stall yours"><svg id="meprev" viewBox="-62 -200 124 214" aria-hidden="true"></svg><h3>Make it yours</h3><small>Name your stall and choose how you look. It’s saved for next time.</small><label for="mename">Stall name</label><input id="mename" maxlength="16" autocomplete="off" spellcheck="false"><div id="meopts"></div><button class="btn" id="medone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
 <div class="stk" id="stk" role="dialog" aria-modal="true" aria-label="Sticker book"><div class="album"><small>STICKER BOOK</small><h2 id="stkh"></h2><div class="sgrid" id="sgrid"></div><div class="acts"><button class="btn" id="stkx" type="button">Back to the market</button></div></div></div>
@@ -311,7 +320,7 @@ el('path',{d:`M${sx-235} ${sy-220} L${sx+235} ${sy-220} L${sx+215} ${sy-160} L${
 let sc='';for(let k=0;k<10;k++){const x0=sx-215+k*43;sc+=`M${x0} ${sy-160} q21.5 34 43 0 `}
 el('path',{d:sc,fill:'#800020',class:'ol',"stroke-width":3.5},aw);
 const ban=g({},S);el('rect',{x:sx-120,y:sy-258,width:240,height:46,rx:23,fill:'#fff8ea',class:'ol'},ban);
-el('text',{x:sx,y:sy-226,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},ban).textContent="Riya’s Stall";
+const banT=el('text',{x:sx,y:sy-226,"text-anchor":'middle',style:'font:700 26px Fredoka,sans-serif;fill:#800020'},ban);
 // lantern
 const ln=g({class:'tag'},S);el('path',{d:`M${sx+190} ${sy-160} v20`,stroke:'#5b3a2e',"stroke-width":3},ln);el('rect',{x:sx+176,y:sy-140,width:28,height:36,rx:9,fill:'#ffcf5a',class:'ol'},ln);
 // counter
@@ -440,30 +449,51 @@ const toggleTray=()=>{if(open||DAY!==2)return;tray=!tray;drawTray();sfx('clink')
 const useStool=()=>WINTER?toggleBundle():toggleTray();
 TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();useStool()}});
 
-/* ---------- Riya, the stall keeper's friend ---------- */
-function riya(x,y){const r=g({transform:`translate(${x} ${y})`});sh(0,4,34,r);const i=g({class:'bob'},r);
-  const SKIN='#f8dcc6',HAIR='#3b2622';
-  // long hair falls behind her shoulders
-  el('path',{d:'M-36 -136 Q -48 -92 -34 -58 Q -10 -50 0 -54 Q 10 -50 34 -58 Q 48 -92 36 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+/* ---------- the shopkeeper: you, drawn from the choices you make ---------- */
+const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a'],style:['long','bob','curly','short'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c'],extra:['flower','glasses','none']};
+const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',short:'Short'},extra:{flower:'Flower clip',glasses:'Glasses',none:'Nothing'}};
+let ME={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,extra:'flower'};
+try{Object.assign(ME,JSON.parse(localStorage.getItem('md-me')||'{}'))}catch(e){}
+function keeper(i,m){const SKIN=LOOK.skin[m.skin]||LOOK.skin[0],HAIR=LOOK.hair[m.hair]||LOOK.hair[0],OUT=LOOK.outfit[m.outfit]||LOOK.outfit[0];
+  // hair that falls behind the shoulders
+  if(m.style==='long')el('path',{d:'M-36 -136 Q -48 -92 -34 -58 Q -10 -50 0 -54 Q 10 -50 34 -58 Q 48 -92 36 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+  if(m.style==='bob')el('path',{d:'M-38 -136 Q -46 -104 -36 -94 Q 0 -86 36 -94 Q 46 -104 38 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+  if(m.style==='curly')[[-34,-104],[34,-104],[-38,-126],[38,-126],[-28,-150],[28,-150],[0,-164],[-16,-162],[16,-162]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:15,fill:HAIR,class:'ol',"stroke-width":3},i));
   el('rect',{x:-13,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i);el('rect',{x:3,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i);
-  el('path',{d:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',fill:'#800020',class:'ol'},i);
+  el('path',{d:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',fill:OUT,class:'ol'},i);
   // a cream stall apron with a pocket
   el('path',{d:'M-18 -82 h36 l5 50 h-46 z',fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('rect',{x:-9,y:-62,width:18,height:12,rx:3,fill:'#ffd34d',class:'ol',"stroke-width":2.5},i);
   el('path',{d:'M-18 -92 q18 14 36 0',stroke:'#ffd34d',"stroke-width":8,fill:'none',"stroke-linecap":'round'},i);
   const arm=g({style:'transform-box:fill-box;transform-origin:0 100%;animation:wave 1.2s ease-in-out infinite'},i);el('path',{d:'M26 -80 q22 -14 26 -44',stroke:SKIN,"stroke-width":10,"stroke-linecap":'round',fill:'none'},arm);el('circle',{cx:52,cy:-126,r:7,fill:SKIN,class:'ol',"stroke-width":2.5},arm);
   el('circle',{cx:0,cy:-128,r:32,fill:SKIN,class:'ol'},i);
-  // a little bun on top, then the fringe sweeping to one side
-  el('circle',{cx:10,cy:-166,r:15,fill:HAIR,class:'ol',"stroke-width":3},i);
-  el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
-  // a rhododendron clip
-  for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i);
+  // the top of the hair, by style
+  if(m.style==='long')el('circle',{cx:10,cy:-166,r:15,fill:HAIR,class:'ol',"stroke-width":3},i);
+  if(m.style==='curly')[[-22,-152],[0,-160],[22,-152]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:13,fill:HAIR},i));
+  else if(m.style==='short')el('path',{d:'M-33 -126 Q -36 -164 0 -164 Q 36 -164 33 -126 Q 24 -146 0 -146 Q -24 -146 -33 -126 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+  else el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   if(WINTER){el('path',{d:'M-36 -132 Q -36 -178 0 -178 Q 36 -178 36 -132 Z',fill:'#d02b8f',class:'ol',"stroke-width":3},i);el('rect',{x:-38,y:-142,width:76,height:15,rx:7,fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('circle',{cx:0,cy:-182,r:11,fill:'#fff8ea',class:'ol',"stroke-width":3},i)}
+  else if(m.extra==='flower'){for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i)}
   el('ellipse',{cx:-11,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);el('ellipse',{cx:12,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);
   el('circle',{cx:-9,cy:-126,r:1.6,fill:'#fff'},i);el('circle',{cx:14,cy:-126,r:1.6,fill:'#fff'},i);
+  if(m.extra==='glasses'){[-11,12].forEach(x=>el('circle',{cx:x,cy:-124,r:10,fill:'none',stroke:'#5b3a2e',"stroke-width":3},i));el('path',{d:'M-1 -125 h2',stroke:'#5b3a2e',"stroke-width":3},i)}
   el('circle',{cx:-19,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);el('circle',{cx:20,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);
-  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i);return r}
+  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i)}
 const st2=document.createElement('style');st2.textContent='@keyframes wave{50%{transform:rotate(-24deg)}}';document.head.appendChild(st2);
-riya(sx+300,sy+120);
+const meG=g({transform:`translate(${sx+300} ${sy+120})`});
+function drawMe(){meG.innerHTML='';sh(0,4,34,meG);keeper(g({class:'bob'},meG),ME);
+  const pv=$('#meprev');if(pv){pv.innerHTML='';keeper(g({},pv),ME)}
+  const n=ME.name.trim()||'The Hill Stall';banT.textContent=n;banT.style.fontSize=n.length>13?'21px':'26px'}
+drawMe();
+function saveMe(){try{localStorage.setItem('md-me',JSON.stringify(ME))}catch(e){}}
+function showMe(){if(started)return;hush();if(narrow())scrollTo(sx+220);$('#mename').value=ME.name;const box=$('#meopts');box.innerHTML='';
+  const row=(label,key,vals,isColour)=>{const l=document.createElement('label');l.textContent=label;box.appendChild(l);const r=document.createElement('div');r.className='swrow';
+    vals.forEach((v,ix)=>{const b=document.createElement('button');b.type='button';const val=isColour?ix:v;b.setAttribute('aria-pressed',String(ME[key]===val));
+      if(isColour){b.className='sw';b.style.background=v;b.setAttribute('aria-label',label+' '+(ix+1))}else{b.className='chip';b.textContent=LOOKNAME[key][v]}
+      b.onclick=()=>{ME[key]=val;saveMe();drawMe();sfx('tap');r.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))};r.appendChild(b)});box.appendChild(r)};
+  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('Outfit','outfit',LOOK.outfit,true);row('Extra','extra',LOOK.extra,false);
+  $('#mepanel').classList.add('on');sfx('clink')}
+$('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()});
+$('#medone').onclick=()=>{sfx('tap');$('#mepanel').classList.remove('on');scrollTo(focus());morning()};
 
 /* ---------- the villagers: an original cast from the Himalaya ---------- */
 function eyes(p,x,y,s){el('ellipse',{cx:x-12*s,cy:y,rx:5*s,ry:7*s,fill:'#2a1a1e',class:'blink'},p);el('ellipse',{cx:x+12*s,cy:y,rx:5*s,ry:7*s,fill:'#2a1a1e',class:'blink'},p);
@@ -787,7 +817,7 @@ function showPrices(k){hush();if(narrow())scrollTo(sx);const pl=$('#plist');pl.i
   $('#prices').classList.add('on')}
 $('#pdone').onclick=()=>{sfx('tap');$('#prices').classList.remove('on');scrollTo(focus());morning()};
 let morningSign=0,morningTray=false,morningBundle=false,lunched=false,paused=false;
-function run(){open=true;started=true;$('#prices').classList.remove('on');morningSign=sign;morningTray=tray;morningBundle=bundle;$('#stall').classList.add('opened');sfx('open');if(FEST)setTimeout(()=>sfx('drum'),350);hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
+function run(){open=true;started=true;$('#prices').classList.remove('on');$('#mepanel').classList.remove('on');morningSign=sign;morningTray=tray;morningBundle=bundle;$('#stall').classList.add('opened');sfx('open');if(FEST)setTimeout(()=>sfx('drum'),350);hush();tapme.style.display='none';toast('The stall is open!');scrollTo(sx);
   if(tray)setTimeout(()=>spend(40,trx,trY-150),700);
   let h=9,m=0;clock(h,m);const tick=setInterval(()=>{if(paused)return;m+=30;if(m>=60){m=0;h++}clock(h,m);document.documentElement.style.setProperty('--dusk',Math.max(0,(h-14)/5*.45))},3000);
   const cast=order.map(villager);let i=0;
@@ -915,7 +945,7 @@ function postBack(){const b=document.createElementNS(NS,'svg');b.setAttribute('v
   for(let k=0;k<7;k++)el('path',{d:`M${30+k*140} 640 l40 -6`,stroke:'#f1e4cc',"stroke-width":2},b);
   el('path',{d:'M600 70 V600',stroke:'#d9c4a5',"stroke-width":3},b);
   // the note, in the shopkeeper's words
-  const msg=['Dear friend,'].concat(wrapText(`Today I minded a stall at the ${DAYNAME[DAY].toLowerCase()}.`,30),
+  const msg=['Dear friend,'].concat(wrapText(`Today I minded ${(ME.name.trim()||'The Hill Stall')} at the ${DAYNAME[DAY].toLowerCase()}.`,30),
     wrapText(`${sold.length} of 5 villagers bought from me, and I took ₹${money.toLocaleString('en-IN')}.`,30),
     best?wrapText(`What worked best: ${PLAIN[best.why]||best.why.toLowerCase()}.`,30):['Nobody bought today. Tomorrow!'],
     ['','Come and see if you can beat me!']);
@@ -971,14 +1001,14 @@ function showPostcard(){const pf=$('#pf'),pb=$('#pb'),card=$('#card3d');pf.inner
 /* ---------- good morning ---------- */
 clock(8,30);scrollTo(focus(),true);
 startBest();
-function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()};
+function morning(){const sp={t:'Set prices',soft:true,fn:()=>showPrices()},mk={t:'Make it yours',soft:true,fn:showMe};
   const other=[1,2,3].filter(d=>d!==DAY&&unlocked(d));
   const days=other.length?{t:'Other days',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Which market day?',other.map(d=>({t:DAYNAME[d]+' →',fn:()=>toDay(d)})).concat([{t:'Stay here',soft:true,fn:morning}]))}:null;
-  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
-  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat(days?[days]:[]));
+  if(WINTER)return talk('Riya','#800020','#fff8ea','Brr, winter market! Kiko’s back from the first day and Bo from the festival. Lumi and Gus are hibernating. Set the prices, choose the sign, and decide whether to bundle '+HOT.word+' with '+NUTS.word+'.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Milo the ibex, Dot the snow partridge and Kiko the yak this morning. After lunch, Tess the fox and Bo the snow leopard cub.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
+  if(DAY===2)return talk('Riya','#800020','#fff8ea','Happy festival day! Pip and Wren are back, and three new faces are coming. Set the prices, choose the sign, and decide whether to put out free tastes.',[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat and Lumi the marmot this morning, then Bo the snow leopard cub. After lunch, Gus the black bear and Wren the red panda. Careful: Gus loves honey a little too much.',[{t:'Open the stall',fn:run},sp])}].concat([mk],days?[days]:[]));
   const b=[{t:'Open the stall',fn:run},sp,{t:'Who’s coming?',soft:true,fn:()=>talk('Riya','#800020','#fff8ea','Pip the goat, Juno the monal, Nell the pika, Kiko the yak and Wren the red panda. Each one has a limit, and each one shops a little differently. Watch closely.',[{t:'Open the stall',fn:run},sp])}];
-  if(days)b.push(days);
-  talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding my stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
+  b.push(mk);if(days)b.push(days);
+  talk('Riya','#800020','#fff8ea','Morning! The hill market opens at nine and you’re minding the stall today. Set the prices, choose what the chalkboard says, then open up.',b)}
 setTimeout(()=>{scrollTo(focus());morning()},500);
 addEventListener('resize',()=>scrollTo(focus(),true));
 })();
