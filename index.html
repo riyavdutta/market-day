@@ -120,6 +120,10 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .stc.locked{background:#fbf3e3;box-shadow:0 0 0 3px #eadcc4}
 .stc.locked b{color:#b8a48f}.stc.locked span{color:#9a7b62}
 .newbuy{transform-box:fill-box;transform-origin:center;animation:stpop .5s var(--spring)}
+.tabs{display:flex;gap:8px;margin-bottom:6px}
+.hts{color:#e8336d;letter-spacing:2px}
+.stc .hts{font:600 15px var(--font);margin-top:2px;color:#e8336d}
+em.hts{font-style:normal;font-size:13px;margin-left:6px}
 .stc.new{animation:stpop .7s var(--spring)}
 @keyframes stpop{0%{transform:scale(.5) rotate(-8deg)}100%{transform:none}}
 .album .acts{flex:none;display:flex;justify-content:center}
@@ -190,7 +194,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 <div class="prices mepanel" id="mepanel" role="dialog" aria-label="Make the stall yours"><div class="mehead"><div><h3>Make it yours</h3><small>Name your stall and choose how you look. It’s saved for next time.</small></div><svg id="meprev" viewBox="-62 -200 124 214" aria-hidden="true"></svg></div><label for="mename">Stall name</label><input id="mename" maxlength="16" autocomplete="off" spellcheck="false"><div id="meopts"></div><button class="btn" id="medone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
-<div class="stk" id="stk" role="dialog" aria-modal="true" aria-label="Sticker book"><div class="album"><small>STICKER BOOK</small><h2 id="stkh"></h2><div class="sgrid" id="sgrid"></div><div class="acts"><button class="btn" id="stkx" type="button">Back to the market</button></div></div></div>
+<div class="stk" id="stk" role="dialog" aria-modal="true" aria-label="Sticker book"><div class="album"><div class="tabs"><button class="chip" id="tabS" type="button">Stickers</button><button class="chip" id="tabF" type="button">Friends</button></div><h2 id="stkh"></h2><div class="sgrid" id="sgrid"></div><div class="acts"><button class="btn" id="stkx" type="button">Back to the market</button></div></div></div>
 <div class="post" id="post" role="dialog" aria-modal="true" aria-label="Your postcard"><div class="card3d" id="card3d" role="button" tabindex="0" aria-label="Your postcard. Tap to turn it over."><div class="face front" id="pf"></div><div class="face back" id="pb"></div></div><p class="flipnote">Tap the card to turn it over</p><div class="acts" id="pa"></div></div>
 <div class="ledger" id="ledger" role="dialog" aria-modal="true" aria-label="Today's ledger"><div class="book"><div class="pages"><div class="page" id="lp"></div><div class="page" id="rp"></div></div><p class="sum" id="sum"></p><div class="acts" id="la"></div></div></div>
 
@@ -867,7 +871,7 @@ function run(){open=true;started=true;$('#prices').classList.remove('on');$('#me
     requestAnimationFrame(()=>{v.o.style.transform='translate('+(sx-60)+'px,'+(sy+250)+'px)'});
     setTimeout(()=>{v.o.classList.remove('walking');v.et.textContent=d.buy?'♥':'…';v.em.classList.add('on');sfx('pop');
       talk(v.v.name,v.v.c,v.v.fg,d.think,null);
-      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);wear(v.inner,v.key,d.buy);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
+      setTimeout(()=>{if(d.buy){earn(d.n,sx-60,sy+20);wear(v.inner,v.key,d.buy);befriend(v.key);setTimeout(()=>award(stickerFor(v.key,d)),700);if(WINTER&&sign===2)setTimeout(()=>spend(10,sx-60,sy-40,'school'),600)}else sfx('meh');log.push(Object.assign({key:v.key},d));
         setTimeout(()=>{v.em.classList.remove('on');hush();v.o.classList.add('walking');v.o.style.setProperty('--wt',reduce?'0s':'3.6s');v.o.style.transform='translate(1700px,670px)';setTimeout(()=>v.o.remove(),3800);nextOne()},1600)},2200)},reduce?50:3300)}
   nextOne();}
 // on a narrow screen the chalkboard and the stall don't fit together, so show the board while it can be changed
@@ -883,19 +887,19 @@ function endDay(){finishBest();const sold=log.filter(l=>l.buy);
   // Day 1 is remembered: whoever bought comes back loyal on Festival day
   const won=k=>log.some(l=>l.key===k&&l.buy);
   try{if(DAY===1)localStorage.setItem('md-d1',JSON.stringify({goat:won('goat'),panda:won('panda'),yak:won('yak')}));if(FEST)localStorage.setItem('md-d2',JSON.stringify({cub:won('cub')}))}catch(e){}
-  $('#lp').innerHTML='<small>'+DAYNAME[DAY]+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+'</b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
+  $('#lp').innerHTML='<small>'+DAYNAME[DAY]+' · ledger</small><h2>Who bought what</h2>'+log.map(l=>{const v=CAST[l.key];return '<div class="row'+(l.buy?'':' no')+'"><i style="--c:'+v.c+';color:'+v.fg+'">'+v.name[0]+'</i><b>'+v.name+(l.buy?' · '+l.buy.replace(' of mountain honey',' of honey'):' · just looked')+' <em class="hts">'+heartStr(l.key)+'</em></b><span>'+(l.buy?'₹'+l.n:'—')+'</span></div>'}).join('')+
     (costs.tastes?'<div class="row"><i style="--c:#f2a91c;color:#5b3a2e">T</i><b>Free tastes</b><span>−₹'+costs.tastes+'</span></div>':'')+
     (costs.school?'<div class="row"><i style="--c:#2f7a52;color:#fff8ea">S</i><b>Books for village children</b><span>−₹'+costs.school+'</span></div>':'')+
     '<div class="total"><span>Takings</span><span>₹'+money.toLocaleString('en-IN')+'</span></div>';
   const said=s=>'“'+SIGNS[s].t.join(' ')+'”';
   const trayNote=WINTER?' · Bundle: '+(morningBundle&&bundle?'all day':morningBundle?'morning only':bundle?'afternoon only':'none'):!FEST?'':' · Tray: '+(morningTray&&tray?'out all day':morningTray?'morning only':tray?'afternoon only':'covered')+(charm?' · Prices end in 9':'');
   $('#rp').innerHTML='<small>'+(sign===morningSign?'Your sign said '+said(sign):'Morning: '+said(morningSign)+' · Afternoon: '+said(sign))+trayNote+'</small><h2>Why they chose</h2>'+log.map(l=>'<div class="why"><span class="principle">'+CAST[l.key].name+' · '+l.why+'</span><br>'+l.note+'</div>').join('');
-  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Sticker book ★',showBook],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
+  $('#la').innerHTML='';[['Get your postcard ✉',showPostcard],['Stickers & friends ★',()=>showBook()],['Play this day again',()=>location.reload()]].concat([1,2,3].filter(d=>d!==DAY).map(d=>[DAYNAME[d]+' →',()=>toDay(d)]))
     .forEach(([t,f],i)=>{const b=document.createElement('button');b.className='btn'+(i?' soft':'');b.textContent=t;b.onclick=()=>{sfx('tap');f()};$('#la').appendChild(b)});
   const n=sold.length;
   let best=money;try{best=Math.max(money,+(localStorage.getItem(KP+'best')||0));localStorage.setItem(KP+'best',best)}catch(e){}
-  const ns=newStk.map(k=>STICKERS.find(x=>x.k===k).t);
-  $('#sum').textContent=(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
+  const ns=newStk.map(k=>STICKERS.find(x=>x.k===k).t),gifts=newGifts.map(k=>CAST[k].name+' gave you '+GIFTS[k]);
+  $('#sum').textContent=(gifts.length?gifts.join(', ')+'! ':'')+(ns.length?'New sticker'+(ns.length>1?'s':'')+': '+ns.join(', ')+'! ':'')+(money>=BEST_DAY?'All 5 bought, at the most they’d pay. The best day there is!'
     :n===5?'All 5 villagers bought something today. Could they have paid a little more?'
     :WINTER?n+' of 5 villagers bought something today. Milo answers to the bundle, Dot to a good cause, Tess to how the price is framed, and Kiko and Bo to how earlier days went.'
     :DAY===2?n+' of 5 villagers bought something today. Lumi answers to free tastes, Gus to prices ending in 9, Bo to the sign, and Pip and Wren to how Day 1 went.'
@@ -942,15 +946,53 @@ function stickerSVG(st,got,i){const s=document.createElementNS(NS,'svg');s.setAt
   if(!st.who){el('path',{d:'M0 26 C -44 -4 -26 -42 0 -20 C 26 -42 44 -4 0 26 Z',fill:'#e8336d',class:'ol'},s);return s}
   const cp=el('clipPath',{id:'stc'+i},s);el('circle',{cx:0,cy:0,r:46},cp);
   const v=g({'clip-path':`url(#stc${i})`},s),m=g({transform:'translate(0 44) scale(.44)'},v);CAST[st.who].draw(m);return s}
-function showBook(){const gr=$('#sgrid');gr.innerHTML='';
+function showBook(tab){const f=tab==='f';$('#tabS').setAttribute('aria-pressed',String(!f));$('#tabF').setAttribute('aria-pressed',String(f));if(!$('#stk').classList.contains('on'))sfx('clink');
+  if(f){showFriends();$('#stk').classList.add('on');return}
+  const gr=$('#sgrid');gr.innerHTML='';
   STICKERS.forEach((st,i)=>{const got=STK.includes(st.k),c=document.createElement('div');c.className='stc'+(got?'':' locked')+(newStk.includes(st.k)?' new':'');
     c.appendChild(stickerSVG(st,got,i));const b=document.createElement('b'),sp=document.createElement('span');
     b.textContent=got?st.t:'Not found yet';sp.textContent=got?st.d:st.who?'Meet '+CAST[st.who].name+' on '+DAYNAME[st.day]:'Win someone over, then see them again another day';c.append(b,sp);gr.appendChild(c)});
   $('#stkh').textContent=STK.length===12?'All 12! You’re a real shopkeeper now.':STK.length+' of 12 stickers';
-  $('#stk').classList.add('on');sfx('clink');newStk=[]}
+  $('#stk').classList.add('on');newStk=[]}
 $('#stkx').onclick=()=>{sfx('tap');$('#stk').classList.remove('on')};
 $('#stkp').onclick=()=>{sfx('tap');showBook()};
+$('#tabS').onclick=()=>{sfx('tap');showBook('s')};$('#tabF').onclick=()=>{sfx('tap');showBook('f')};
 drawStkPill();
+
+/* ---------- friendship: a heart for every happy sale, and a gift at five ---------- */
+let HEARTS={};try{HEARTS=JSON.parse(localStorage.getItem('md-hearts')||'{}')||{}}catch(e){}
+const newGifts=[],HOME={goat:1,monal:1,pika:1,yak:1,panda:1,marmot:2,cub:2,bear:2,ibex:3,partridge:3,fox:3};
+const GIFTS={goat:'a brass bell',monal:'a feather fan',pika:'a pot of wildflowers',yak:'a woven rug',panda:'a paper lantern',marmot:'a sunflower',cub:'a string of stars',bear:'a carved wooden plaque',ibex:'a wind chime',partridge:'a little birdhouse',fox:'knitted bunting'};
+const heartsOf=k=>Math.min(5,HEARTS[k]||0),heartStr=k=>'♥'.repeat(heartsOf(k))+'♡'.repeat(5-heartsOf(k));
+function star(p,x,y,r,c){let d='';for(let k=0;k<10;k++){const a=k*Math.PI/5-Math.PI/2,rr=k%2?r*.45:r;d+=(k?'L':'M')+(x+Math.cos(a)*rr).toFixed(1)+' '+(y+Math.sin(a)*rr).toFixed(1)}el('path',{d:d+'Z',fill:c,class:'ol',"stroke-width":1.5},p)}
+// each friend's gift has its own spot on the stall, so they can all be there at once
+const DECO={
+  goat:p=>{const x=sx-120,y=sy-146;el('path',{d:`M${x} ${y} v10`,stroke:'#5b3a2e',"stroke-width":2},p);el('path',{d:`M${x-10} ${y+26} q0 -16 10 -16 q10 0 10 16 z`,fill:'#e3bd00',class:'ol',"stroke-width":2.5},p);el('circle',{cx:x,cy:y+29,r:3,fill:'#5b3a2e'},p)},
+  panda:p=>{const x=sx-60,y=sy-146;el('path',{d:`M${x} ${y} v8`,stroke:'#5b3a2e',"stroke-width":2},p);el('ellipse',{cx:x,cy:y+20,rx:11,ry:13,fill:'#ff6b8a',class:'ol',"stroke-width":2.5},p);el('path',{d:`M${x-11} ${y+20} h22`,stroke:'#fff8ea',"stroke-width":2},p)},
+  ibex:p=>{const x=sx+60,y=sy-146;el('path',{d:`M${x-12} ${y+6} h24`,stroke:'#a86b43',"stroke-width":3},p);[-9,-3,3,9].forEach((d,k)=>{el('path',{d:`M${x+d} ${y+6} v${6+k%2*5}`,stroke:'#5b3a2e',"stroke-width":1.5},p);el('rect',{x:x+d-2,y:y+12+k%2*5,width:4,height:14,rx:2,fill:'#bfe9ff',class:'ol',"stroke-width":1.5},p)})},
+  cub:p=>{[-215,-185,-155,155,185,215].forEach((dx,k)=>star(p,sx+dx,sy-232,8,FUN[k%FUN.length]))},
+  monal:p=>{const x=sx-200,y=sy-110;['#1f8a8a','#2f5bff','#7a3cff','#00a36c','#ff7a45'].forEach((c,k)=>{const a=(-60+k*30)*Math.PI/180;el('path',{d:`M${x} ${y} L${x+Math.sin(a)*24} ${y-Math.cos(a)*24}`,stroke:c,"stroke-width":6,"stroke-linecap":'round'},p)});el('circle',{cx:x,cy:y,r:5,fill:'#e3bd00',class:'ol',"stroke-width":2},p)},
+  partridge:p=>{const x=sx-200,y=sy-226;el('path',{d:`M${x-16} ${y} L${x} ${y-14} L${x+16} ${y} Z`,fill:'#c0392b',class:'ol',"stroke-width":2.5},p);el('rect',{x:x-12,y,width:24,height:20,fill:'#f2c14e',class:'ol',"stroke-width":2.5},p);el('circle',{cx:x,cy:y+9,r:4,fill:'#5b3a2e'},p)},
+  bear:p=>{const x=sx-150,y=sy+100;el('rect',{x:x-18,y:y-14,width:36,height:28,rx:5,fill:'#c98a5a',class:'ol',"stroke-width":2.5},p);el('circle',{cx:x,cy:y+3,r:6,fill:'#7a4a2a'},p);[-6,0,6].forEach(d=>el('circle',{cx:x+d,cy:y-6,r:2.6,fill:'#7a4a2a'},p))},
+  pika:p=>{const x=sx-222,y=sy+128;[[-8,-24,'#7a3cff'],[0,-32,'#ffd34d'],[8,-24,'#ff6b8a']].forEach(([dx,dy,c])=>{el('path',{d:`M${x+dx} ${y-16} V${y+dy}`,stroke:'#3a8c3a',"stroke-width":2},p);el('circle',{cx:x+dx,cy:y+dy,r:5,fill:c,class:'ol',"stroke-width":1.5},p)});el('path',{d:`M${x-14} ${y-16} h28 l-4 20 h-20 z`,fill:'#c0622e',class:'ol',"stroke-width":2.5},p)},
+  marmot:p=>{const x=sx+178,y=sy+128;el('path',{d:`M${x} ${y-14} v-30`,stroke:'#3a8c3a',"stroke-width":3},p);for(let k=0;k<10;k++){const a=k*Math.PI/5,px=x+Math.cos(a)*9,py=y-48+Math.sin(a)*9;el('ellipse',{cx:px,cy:py,rx:6,ry:3,transform:`rotate(${k*36} ${px} ${py})`,fill:'#ffd34d',class:'ol',"stroke-width":1},p)}el('circle',{cx:x,cy:y-48,r:6,fill:'#7a4a2a'},p);el('path',{d:`M${x-12} ${y-14} h24 l-3 18 h-18 z`,fill:'#c0622e',class:'ol',"stroke-width":2.5},p)},
+  yak:p=>{el('ellipse',{cx:sx,cy:sy+160,rx:120,ry:20,fill:'#c0392b',class:'ol',"stroke-width":3},p);el('ellipse',{cx:sx,cy:sy+160,rx:96,ry:13,fill:'none',stroke:'#ffd34d',"stroke-width":3,"stroke-dasharray":'8 6'},p)},
+  fox:p=>{el('path',{d:`M${sx-212} ${sy+50} Q ${sx} ${sy+66} ${sx+212} ${sy+50}`,fill:'none',stroke:'#5b3a2e',"stroke-width":1.5},p);for(let k=0;k<11;k++){const x=sx-200+k*40,y=sy+50+Math.sin(k/10*Math.PI)*8;el('path',{d:`M${x-12} ${y} h24 l-12 16 z`,fill:FUN[(k+3)%FUN.length],class:'ol',"stroke-width":1.5},p)}}};
+const decoG=g({},S);
+function drawGifts(){decoG.innerHTML='';Object.keys(GIFTS).forEach(k=>{if(heartsOf(k)>=5)DECO[k](g({class:newGifts.includes(k)?'newbuy':''},decoG))})}
+drawGifts();
+function befriend(key){const before=heartsOf(key);if(before>=5)return;HEARTS[key]=before+1;try{localStorage.setItem('md-hearts',JSON.stringify(HEARTS))}catch(e){}
+  const c=el('text',{x:sx-20,y:sy+110,"text-anchor":'middle',class:'coin',style:'fill:#e8336d'});c.textContent='+♥';setTimeout(()=>c.remove(),1500);
+  if(HEARTS[key]===5){newGifts.push(key);drawGifts();setTimeout(()=>{sfx('sticker');toast(CAST[key].name+' gave you '+GIFTS[key]+'!')},1800)}}
+function portrait(k,id,col){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','-60 -60 120 120');s.setAttribute('aria-hidden','true');
+  el('circle',{cx:0,cy:0,r:55,fill:'#fff',stroke:'#5b3a2e',"stroke-width":3},s);el('circle',{cx:0,cy:0,r:46,fill:col},s);const cp=el('clipPath',{id},s);el('circle',{cx:0,cy:0,r:46},cp);
+  CAST[k].draw(g({transform:'translate(0 44) scale(.44)'},g({'clip-path':`url(#${id})`},s)));return s}
+function showFriends(){const gr=$('#sgrid');gr.innerHTML='';let full=0;
+  Object.keys(GIFTS).forEach((k,i)=>{const h=heartsOf(k);if(h>=5)full++;const c=document.createElement('div');c.className='stc'+(h?'':' locked');
+    c.appendChild(portrait(k,'frc'+i,h?['','#bfe6a8','#ffd2a1','#d7e8f5'][HOME[k]]:'#ece4d6'));
+    const b=document.createElement('b'),hs=document.createElement('span'),sp=document.createElement('span');b.textContent=CAST[k].name;hs.className='hts';hs.textContent=heartStr(k);
+    sp.textContent=h>=5?'Gave you '+GIFTS[k]:h?(5-h)+' more '+(5-h>1?'hearts':'heart')+' to a gift':'Meet '+CAST[k].name+' on '+DAYNAME[HOME[k]];c.append(b,hs,sp);gr.appendChild(c)});
+  $('#stkh').textContent=full?full+' of 11 friends '+(full===1?'has':'have')+' brought you a gift':'Win friends, and they bring gifts'}
 
 /* ---------- dusk: a postcard to keep ---------- */
 const PV={x:270,y:230,w:1005,h:670};              // the part of the market the front shows
