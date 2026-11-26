@@ -137,7 +137,9 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 .prices{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:45;width:min(440px,calc(100% - 20px));max-height:calc(100vh - 90px);overflow:auto;background:var(--paper);border-radius:28px;padding:18px 20px 16px;box-shadow:0 0 0 5px var(--ink),0 10px 0 5px #0000001f;display:none}
 .prices.on{display:block;animation:open .45s var(--spring)}
 @media (min-width:1000px){.prices{left:auto;right:20px;translate:none;width:400px}.mepanel{right:auto;left:20px}}
-#meprev{float:right;width:76px;height:132px;margin:-6px -4px 0 8px;background:#eaf6df;border-radius:16px;box-shadow:0 0 0 3px #e0c89e}
+.mehead{position:sticky;top:-18px;z-index:3;background:var(--paper);display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:4px 0 6px}
+.mehead small{display:block;font:500 15px/1.35 var(--font);color:#9a7b62;margin-top:2px}
+#meprev{flex:none;width:76px;height:132px;background:#eaf6df;border-radius:16px;box-shadow:0 0 0 3px #e0c89e}
 .mepanel label{display:block;font:600 14px var(--font);color:#9a7b62;margin:10px 0 4px}
 .mepanel input{width:100%;font:600 18px var(--font);color:var(--b);background:#fff;border:0;border-radius:14px;padding:9px 14px;box-shadow:0 0 0 3px var(--ink) inset}
 .swrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -185,7 +187,7 @@ button.pill{border:0;padding:8px 12px 8px 10px}
 <div class="hud l"><span class="pill title"><b>Market Day</b></span><span class="pill" id="clock"><span class="ic">☀</span><span id="time">8:30 am</span></span><button class="pill" id="stkp" type="button" aria-label="Sticker book"><span class="ic">★</span><span id="stkn">0/12</span></button></div>
 <div class="hud r"><button class="pill snd" id="snd" type="button" aria-pressed="true" aria-label="Sound"><span class="ic">♪</span><span id="sndtx">On</span></button><span class="pill purse" id="purse"><span class="ic">₹</span><span id="money">0</span></span></div>
 <div class="prices" id="prices" role="dialog" aria-label="Price tags"><h3>Price tags</h3><small>Every villager has a limit. The right sign, or the right price beside it, can stretch it.</small><div id="plist"></div><button class="btn" id="pdone" type="button">Done</button></div>
-<div class="prices mepanel" id="mepanel" role="dialog" aria-label="Make the stall yours"><svg id="meprev" viewBox="-62 -200 124 214" aria-hidden="true"></svg><h3>Make it yours</h3><small>Name your stall and choose how you look. It’s saved for next time.</small><label for="mename">Stall name</label><input id="mename" maxlength="16" autocomplete="off" spellcheck="false"><div id="meopts"></div><button class="btn" id="medone" type="button">Done</button></div>
+<div class="prices mepanel" id="mepanel" role="dialog" aria-label="Make the stall yours"><div class="mehead"><div><h3>Make it yours</h3><small>Name your stall and choose how you look. It’s saved for next time.</small></div><svg id="meprev" viewBox="-62 -200 124 214" aria-hidden="true"></svg></div><label for="mename">Stall name</label><input id="mename" maxlength="16" autocomplete="off" spellcheck="false"><div id="meopts"></div><button class="btn" id="medone" type="button">Done</button></div>
 <div class="toast" id="toast"></div>
 <div class="talk" id="talk" role="dialog" aria-live="polite"><span class="who" id="who">Riya</span><p id="say"></p><div class="acts" id="acts"></div></div>
 <div class="stk" id="stk" role="dialog" aria-modal="true" aria-label="Sticker book"><div class="album"><small>STICKER BOOK</small><h2 id="stkh"></h2><div class="sgrid" id="sgrid"></div><div class="acts"><button class="btn" id="stkx" type="button">Back to the market</button></div></div></div>
@@ -450,42 +452,62 @@ const useStool=()=>WINTER?toggleBundle():toggleTray();
 TR.addEventListener('click',useStool);TR.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();useStool()}});
 
 /* ---------- the shopkeeper: you, drawn from the choices you make ---------- */
-const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a'],style:['long','bob','curly','short','side'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c'],top:['dress','kurta','shirt'],face:['none','moustache','beard'],extra:['flower','glasses','cap','none']};
-const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',short:'Short',side:'Side part'},top:{dress:'Dress',kurta:'Kurta',shirt:'Shirt'},face:{none:'None',moustache:'Moustache',beard:'Beard'},extra:{flower:'Flower clip',glasses:'Glasses',cap:'Himachali cap',none:'Nothing'}};
-let ME={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,top:'dress',face:'none',extra:'flower'};
+const LOOK={skin:['#f8dcc6','#efc19c','#d9a074','#b97a4f','#8a5636'],hair:['#3b2622','#1f1a1a','#8a5230','#c98a3a','#5a1a2a'],style:['long','bob','curly','braid','bun'],
+  top:['dress','kurta','lehenga','pattu'],outfit:['#800020','#2f5bff','#00a36c','#7a3cff','#e8602c','#e8336d','#e3a92b'],pattern:['plain','dots','stripes','flowers'],
+  apron:['cream','yellow','pink','none'],hairacc:['flower','bow','band','none'],ears:['none','jhumkas','hoops'],face:['none','bindi','glasses','both']};
+const LOOKNAME={style:{long:'Long',bob:'Bob',curly:'Curls',braid:'Side braid',bun:'High bun'},top:{dress:'Dress',kurta:'Kurta & dupatta',lehenga:'Lehenga',pattu:'Pattu'},
+  pattern:{plain:'Plain',dots:'Dots',stripes:'Stripes',flowers:'Flowers'},apron:{cream:'Cream',yellow:'Yellow',pink:'Pink',none:'No apron'},
+  hairacc:{flower:'Flower clip',bow:'Ribbon bow',band:'Hairband',none:'Nothing'},ears:{none:'None',jhumkas:'Jhumkas',hoops:'Hoops'},face:{none:'None',bindi:'Bindi',glasses:'Glasses',both:'Bindi & glasses'}};
+const MEDEF={name:'The Hill Stall',skin:0,hair:0,style:'long',outfit:0,top:'dress',pattern:'plain',apron:'cream',hairacc:'flower',ears:'none',face:'none'};
+let ME=Object.assign({},MEDEF);
 try{Object.assign(ME,JSON.parse(localStorage.getItem('md-me')||'{}'))}catch(e){}
-function keeper(i,m){const SKIN=LOOK.skin[m.skin]||LOOK.skin[0],HAIR=LOOK.hair[m.hair]||LOOK.hair[0],OUT=LOOK.outfit[m.outfit]||LOOK.outfit[0];
+// anything saved from an older version that's no longer offered goes back to the default
+['style','top','pattern','apron','hairacc','ears','face'].forEach(k=>{if(!LOOK[k].includes(ME[k]))ME[k]=MEDEF[k]});['skin','hair','outfit'].forEach(k=>{if(!(ME[k]>=0&&ME[k]<LOOK[k].length))ME[k]=MEDEF[k]});
+let clipN=0;
+function keeper(i,m){const SKIN=LOOK.skin[m.skin],HAIR=LOOK.hair[m.hair],OUT=LOOK.outfit[m.outfit],top=m.top,GOLD='#e3bd00';
   // hair that falls behind the shoulders
   if(m.style==='long')el('path',{d:'M-36 -136 Q -48 -92 -34 -58 Q -10 -50 0 -54 Q 10 -50 34 -58 Q 48 -92 36 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
-  if(m.style==='bob')el('path',{d:'M-38 -136 Q -46 -104 -36 -94 Q 0 -86 36 -94 Q 46 -104 38 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+  if(m.style==='bob'||m.style==='braid')el('path',{d:'M-38 -136 Q -46 -104 -36 -94 Q 0 -86 36 -94 Q 46 -104 38 -136 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
   if(m.style==='curly')[[-34,-104],[34,-104],[-38,-126],[38,-126],[-28,-150],[28,-150],[0,-164],[-16,-162],[16,-162]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:15,fill:HAIR,class:'ol',"stroke-width":3},i));
-  const top=m.top||'dress',LEG=top==='kurta'?'#fff8ea':top==='shirt'?'#3a3a6e':'#3a2a2a';
-  if(top==='dress'){el('rect',{x:-13,y:-34,width:10,height:34,rx:5,fill:LEG},i);el('rect',{x:3,y:-34,width:10,height:34,rx:5,fill:LEG},i)}
-  else{el('rect',{x:-16,y:-50,width:14,height:50,rx:5,fill:LEG,class:'ol',"stroke-width":2.5},i);el('rect',{x:2,y:-50,width:14,height:50,rx:5,fill:LEG,class:'ol',"stroke-width":2.5},i);[-9,9].forEach(x=>el('ellipse',{cx:x,cy:0,rx:10,ry:5,fill:'#3a2a2a'},i))}
-  if(top==='dress')el('path',{d:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',fill:OUT,class:'ol'},i);
-  if(top==='kurta'){el('path',{d:'M-28 -22 Q -28 -96 0 -98 Q 28 -96 28 -22 L 10 -22 L 6 -40 L -6 -40 L -10 -22 Z',fill:OUT,class:'ol'},i);el('path',{d:'M0 -96 v26',stroke:'#ffd34d',"stroke-width":3},i)}
-  if(top==='shirt'){el('path',{d:'M-28 -44 Q -28 -96 0 -98 Q 28 -96 28 -44 Z',fill:OUT,class:'ol'},i);el('path',{d:'M-8 -96 l8 9 l8 -9',fill:'none',stroke:'#fff8ea',"stroke-width":3},i)}
-  // a cream stall apron with a pocket
-  el('path',{d:'M-18 -82 h36 l5 50 h-46 z',fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('rect',{x:-9,y:-62,width:18,height:12,rx:3,fill:'#ffd34d',class:'ol',"stroke-width":2.5},i);
+  // legs, then the outfit
+  if(top==='dress'||top==='pattu'){el('rect',{x:-13,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i);el('rect',{x:3,y:-34,width:10,height:34,rx:5,fill:'#3a2a2a'},i)}
+  if(top==='kurta'){el('rect',{x:-16,y:-44,width:14,height:44,rx:5,fill:'#fff8ea',class:'ol',"stroke-width":2.5},i);el('rect',{x:2,y:-44,width:14,height:44,rx:5,fill:'#fff8ea',class:'ol',"stroke-width":2.5},i);[-9,9].forEach(x=>el('ellipse',{cx:x,cy:0,rx:9,ry:5,fill:'#3a2a2a'},i))}
+  const BODY={dress:'M-30 -30 Q -28 -96 0 -98 Q 28 -96 30 -30 Z',kurta:'M-28 -22 Q -28 -96 0 -98 Q 28 -96 28 -22 L 10 -22 L 6 -40 L -6 -40 L -10 -22 Z',
+    lehenga:'M-24 -68 Q -26 -96 0 -98 Q 26 -96 24 -68 Q 44 -24 46 0 H -46 Q -44 -24 -24 -68 Z',pattu:'M-30 -26 Q -28 -96 0 -98 Q 28 -96 30 -26 Z'}[top];
+  el('path',{d:BODY,fill:OUT,class:'ol'},i);
+  // a pattern on the fabric, kept inside the outfit's shape
+  if(m.pattern!=='plain'){const id='kc'+(++clipN),cp=el('clipPath',{id},i);el('path',{d:BODY},cp);const pg=g({'clip-path':`url(#${id})`,opacity:.55},i);
+    if(m.pattern==='dots')for(let y=-94;y<0;y+=12)for(let x=-48;x<50;x+=12)el('circle',{cx:x+(y/12%2?6:0),cy:y,r:2.8,fill:'#fff8ea'},pg);
+    if(m.pattern==='stripes')for(let y=-92;y<0;y+=10)el('rect',{x:-50,y,width:100,height:4,fill:'#fff8ea'},pg);
+    if(m.pattern==='flowers')for(let y=-88;y<0;y+=18)for(let x=-44;x<50;x+=18){const cx=x+(y/18%2?9:0);for(let q=0;q<5;q++)el('circle',{cx:cx+Math.cos(q*1.256)*3.5,cy:y+Math.sin(q*1.256)*3.5,r:2.6,fill:'#fff8ea'},pg);el('circle',{cx,cy:y,r:1.8,fill:GOLD},pg)}}
+  // trims that make each outfit what it is
+  if(top==='lehenga'){el('path',{d:'M-24 -68 H 24',stroke:GOLD,"stroke-width":5},i);el('path',{d:'M-45 -6 H 45',stroke:GOLD,"stroke-width":6},i);for(let x=-38;x<=38;x+=12)el('circle',{cx:x,cy:-13,r:2.5,fill:GOLD},i)}
+  if(top==='pattu'){el('path',{d:'M-30 -40 H 30',stroke:GOLD,"stroke-width":7},i);el('path',{d:'M-29 -40 l6 -6 l6 6 l6 -6 l6 6 l6 -6 l6 6 l6 -6 l6 6 l5 -5',fill:'none',stroke:'#2f5bff',"stroke-width":2.5},i);el('circle',{cx:-17,cy:-86,r:6,fill:'#d9d9e3',class:'ol',"stroke-width":2},i);el('circle',{cx:17,cy:-86,r:6,fill:'#d9d9e3',class:'ol',"stroke-width":2},i)}
+  // a cream, yellow or pink stall apron with a pocket, or none
+  if(m.apron!=='none'){const AP={cream:'#fff8ea',yellow:'#ffe08a',pink:'#ffc2d1'}[m.apron];el('path',{d:'M-18 -82 h36 l5 50 h-46 z',fill:AP,class:'ol',"stroke-width":3},i);el('rect',{x:-9,y:-62,width:18,height:12,rx:3,fill:m.apron==='yellow'?'#ff9f43':'#ffd34d',class:'ol',"stroke-width":2.5},i)}
   el('path',{d:'M-18 -92 q18 14 36 0',stroke:'#ffd34d',"stroke-width":8,fill:'none',"stroke-linecap":'round'},i);
+  // a dupatta over the shoulders goes with the kurta
+  if(top==='kurta'){const DU=m.outfit===6?'#ff6b8a':'#ffd34d';el('path',{d:'M-28 -94 Q -2 -78 26 -50',fill:'none',stroke:'#5b3a2e',"stroke-width":13,"stroke-linecap":'round'},i);el('path',{d:'M-28 -94 Q -2 -78 26 -50',fill:'none',stroke:DU,"stroke-width":9,"stroke-linecap":'round'},i);el('path',{d:'M26 -50 l4 18',stroke:DU,"stroke-width":8,"stroke-linecap":'round'},i)}
   const arm=g({style:'transform-box:fill-box;transform-origin:0 100%;animation:wave 1.2s ease-in-out infinite'},i);el('path',{d:'M26 -80 q22 -14 26 -44',stroke:SKIN,"stroke-width":10,"stroke-linecap":'round',fill:'none'},arm);el('circle',{cx:52,cy:-126,r:7,fill:SKIN,class:'ol',"stroke-width":2.5},arm);
+  // earrings sit just below the ears
+  if(m.ears==='jhumkas')[-31,31].forEach(x=>{el('path',{d:`M${x-6} ${-108} q6 -10 12 0 z`,fill:GOLD,class:'ol',"stroke-width":1.5},i);[-4,0,4].forEach(dx=>el('circle',{cx:x+dx,cy:-104,r:1.8,fill:GOLD},i))});
+  if(m.ears==='hoops')[-31,31].forEach(x=>el('circle',{cx:x,cy:-106,r:6,fill:'none',stroke:GOLD,"stroke-width":2.5},i));
   el('circle',{cx:0,cy:-128,r:32,fill:SKIN,class:'ol'},i);
   // the top of the hair, by style
-  if(m.style==='long')el('circle',{cx:10,cy:-166,r:15,fill:HAIR,class:'ol',"stroke-width":3},i);
   if(m.style==='curly')[[-22,-152],[0,-160],[22,-152]].forEach(([x,y])=>el('circle',{cx:x,cy:y,r:13,fill:HAIR},i));
-  else if(m.style==='side')el('path',{d:'M-34 -124 Q -38 -164 2 -164 Q 38 -162 34 -126 Q 28 -150 -2 -151 Q -16 -150 -22 -140 Q -28 -141 -34 -124 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
-  else if(m.style==='short')el('path',{d:'M-33 -126 Q -36 -164 0 -164 Q 36 -164 33 -126 Q 24 -146 0 -146 Q -24 -146 -33 -126 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
-  else el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i);
+  else{if(m.style==='long')el('circle',{cx:10,cy:-166,r:15,fill:HAIR,class:'ol',"stroke-width":3},i);if(m.style==='bun')el('circle',{cx:0,cy:-172,r:19,fill:HAIR,class:'ol',"stroke-width":3},i);
+    el('path',{d:'M-35 -122 Q -40 -166 4 -164 Q 40 -164 35 -120 Q 30 -140 16 -144 Q 2 -136 -14 -140 Q -26 -136 -35 -122 Z',fill:HAIR,class:'ol',"stroke-width":3},i)}
+  if(m.style==='braid'){for(let k=0;k<5;k++)el('ellipse',{cx:30+k*1.5,cy:-104+k*12,rx:8,ry:8,fill:HAIR,class:'ol',"stroke-width":2.5},i);el('circle',{cx:38,cy:-44,r:4,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i)}
   if(WINTER){el('path',{d:'M-36 -132 Q -36 -178 0 -178 Q 36 -178 36 -132 Z',fill:'#d02b8f',class:'ol',"stroke-width":3},i);el('rect',{x:-38,y:-142,width:76,height:15,rx:7,fill:'#fff8ea',class:'ol',"stroke-width":3},i);el('circle',{cx:0,cy:-182,r:11,fill:'#fff8ea',class:'ol',"stroke-width":3},i)}
-  else if(m.extra==='cap'){el('path',{d:'M-31 -140 q0 -34 31 -34 q31 0 31 34 z',fill:'#3a3a6e',class:'ol',"stroke-width":3},i);el('rect',{x:-33,y:-152,width:66,height:14,rx:4,fill:'#e3bd00',class:'ol',"stroke-width":2.5},i);for(let k=0;k<4;k++)el('rect',{x:-27+k*15,y:-150,width:8,height:10,rx:2,fill:FUN[k]},i)}
-  else if(m.extra==='flower'){for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i)}
+  else if(m.hairacc==='flower'){for(let k=0;k<5;k++)el('circle',{cx:-22+Math.cos(k*1.256)*6,cy:-150+Math.sin(k*1.256)*6,r:5.5,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i);el('circle',{cx:-22,cy:-150,r:3.5,fill:'#ffd34d'},i)}
+  else if(m.hairacc==='bow'){el('path',{d:'M-22 -152 l-14 -9 v18 z M-22 -152 l14 -9 v18 z',fill:'#e8336d',class:'ol',"stroke-width":2},i);el('circle',{cx:-22,cy:-152,r:4,fill:'#ff6b8a',class:'ol',"stroke-width":1.5},i)}
+  else if(m.hairacc==='band')el('path',{d:'M-33 -134 Q 0 -178 33 -134',fill:'none',stroke:'#ff6b8a',"stroke-width":7,"stroke-linecap":'round'},i);
   el('ellipse',{cx:-11,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);el('ellipse',{cx:12,cy:-124,rx:4,ry:5.5,fill:'#2a1a1e',class:'blink'},i);
   el('circle',{cx:-9,cy:-126,r:1.6,fill:'#fff'},i);el('circle',{cx:14,cy:-126,r:1.6,fill:'#fff'},i);
-  if(m.extra==='glasses'){[-11,12].forEach(x=>el('circle',{cx:x,cy:-124,r:10,fill:'none',stroke:'#5b3a2e',"stroke-width":3},i));el('path',{d:'M-1 -125 h2',stroke:'#5b3a2e',"stroke-width":3},i)}
+  if(m.face==='bindi'||m.face==='both')el('circle',{cx:0,cy:-134,r:3,fill:'#d0021b'},i);
+  if(m.face==='glasses'||m.face==='both'){[-11,12].forEach(x=>el('circle',{cx:x,cy:-124,r:10,fill:'none',stroke:'#5b3a2e',"stroke-width":3},i));el('path',{d:'M-1 -125 h2',stroke:'#5b3a2e',"stroke-width":3},i)}
   el('circle',{cx:-19,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);el('circle',{cx:20,cy:-112,r:6,fill:'#ff9aa6',opacity:.45},i);
-  if(m.face==='beard')el('path',{d:'M-31 -130 Q -34 -92 0 -90 Q 34 -92 31 -130 Q 24 -106 0 -104 Q -24 -106 -31 -130 Z',fill:HAIR,class:'ol',"stroke-width":2.5},i);
-  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i);
-  if(m.face==='moustache'||m.face==='beard')el('path',{d:'M-14 -112 q7 -7 14 -1 q7 -6 14 1 q-7 5 -14 1 q-7 4 -14 -1 z',fill:HAIR,class:'ol',"stroke-width":2},i)}
+  el('path',{d:'M-7 -108 q7 6 14 0',stroke:'#2a1a1e',"stroke-width":3,fill:'none',"stroke-linecap":'round'},i)}
 const st2=document.createElement('style');st2.textContent='@keyframes wave{50%{transform:rotate(-24deg)}}';document.head.appendChild(st2);
 const meG=g({transform:`translate(${sx+300} ${sy+120})`});
 function drawMe(){meG.innerHTML='';sh(0,4,34,meG);keeper(g({class:'bob'},meG),ME);
@@ -498,7 +520,7 @@ function showMe(){if(started)return;hush();if(narrow())scrollTo(sx+220);$('#mena
     vals.forEach((v,ix)=>{const b=document.createElement('button');b.type='button';const val=isColour?ix:v;b.setAttribute('aria-pressed',String(ME[key]===val));
       if(isColour){b.className='sw';b.style.background=v;b.setAttribute('aria-label',label+' '+(ix+1))}else{b.className='chip';b.textContent=LOOKNAME[key][v]}
       b.onclick=()=>{ME[key]=val;saveMe();drawMe();sfx('tap');r.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))};r.appendChild(b)});box.appendChild(r)};
-  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Face','face',LOOK.face,false);row('Extra','extra',LOOK.extra,false);
+  row('Skin','skin',LOOK.skin,true);row('Hair','style',LOOK.style,false);row('Hair colour','hair',LOOK.hair,true);row('In the hair','hairacc',LOOK.hairacc,false);row('Clothes','top',LOOK.top,false);row('Outfit colour','outfit',LOOK.outfit,true);row('Pattern','pattern',LOOK.pattern,false);row('Apron','apron',LOOK.apron,false);row('Earrings','ears',LOOK.ears,false);row('Face','face',LOOK.face,false);
   $('#mepanel').classList.add('on');sfx('clink')}
 $('#mename').addEventListener('input',e=>{ME.name=e.target.value.slice(0,16);saveMe();drawMe()});
 $('#medone').onclick=()=>{sfx('tap');$('#mepanel').classList.remove('on');scrollTo(focus());morning()};
